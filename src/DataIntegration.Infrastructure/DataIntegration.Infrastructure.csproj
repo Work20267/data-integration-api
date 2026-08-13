@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataIntegration.Core\DataIntegration.Core.csproj" />
+  </ItemGroup>
+
+</Project>

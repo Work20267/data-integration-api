@@ -1,0 +1,25 @@
+# Normalize to LF in the repository. CI runs on Linux runners, and the smoke-test
+# shell script in cd.yml breaks if it lands there with CRLF endings.
+* text=auto eol=lf
+
+*.cs        text eol=lf
+*.csproj    text eol=lf
+*.props     text eol=lf
+*.slnx      text eol=lf
+*.bicep     text eol=lf
+*.bicepparam text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.json      text eol=lf
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+
+# Windows-only scripts keep CRLF.
+*.ps1       text eol=crlf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.dll binary

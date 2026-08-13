@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [develop, 'feature/**', 'release/**', 'hotfix/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required by the what-if job's OIDC login
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+jobs:
+  build-test:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: >
+          dotnet test --no-build --configuration Release
+          --logger "trx;LogFileName=test-results.trx"
+          --results-directory ./TestResults
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./TestResults
+
+      - name: Publish
+        run: >
+          dotnet publish src/DataIntegration.Api/DataIntegration.Api.csproj
+          --no-build --configuration Release --output ./publish
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app
+          path: ./publish
+          retention-days: 7
+
+  bicep-lint:
+    name: Bicep Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile Bicep
+        run: az bicep build --file infra/main.bicep --stdout > /dev/null
+
+  # Shows the reviewer exactly what infrastructure a PR would change.
+  # Add this as a required check only after the Azure secrets are configured.
+  infra-what-if:
+    name: Infra What-If
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: bicep-lint
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: What-if
+        run: >
+          az deployment group what-if
+          --resource-group ${{ vars.AZURE_RESOURCE_GROUP }}
+          --template-file infra/main.bicep
+          --parameters infra/dev.bicepparam

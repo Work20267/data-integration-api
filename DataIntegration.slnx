@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DataIntegration.Api/DataIntegration.Api.csproj" />
+    <Project Path="src/DataIntegration.Core/DataIntegration.Core.csproj" />
+    <Project Path="src/DataIntegration.Infrastructure/DataIntegration.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DataIntegration.IntegrationTests/DataIntegration.IntegrationTests.csproj" />
+    <Project Path="tests/DataIntegration.UnitTests/DataIntegration.UnitTests.csproj" />
+  </Folder>
+</Solution>

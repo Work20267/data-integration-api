@@ -1,0 +1,90 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # required for OIDC federated auth to Azure
+
+# Never let two deploys race to the same environment.
+concurrency:
+  group: cd-dev
+  cancel-in-progress: false
+
+env:
+  DOTNET_VERSION: '10.0.x'
+  DOTNET_NOLOGO: 'true'
+  DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+
+jobs:
+  deploy:
+    name: Deploy to Azure
+    runs-on: ubuntu-latest
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Publish
+        run: >
+          dotnet publish src/DataIntegration.Api/DataIntegration.Api.csproj
+          --configuration Release --output ./publish
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy infrastructure
+        id: infra
+        uses: azure/arm-deploy@v2
+        with:
+          scope: resourcegroup
+          resourceGroupName: ${{ vars.AZURE_RESOURCE_GROUP }}
+          template: infra/main.bicep
+          parameters: infra/dev.bicepparam
+          failOnStdErr: false
+
+      - name: Deploy application
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ steps.infra.outputs.appServiceName }}
+          package: ./publish
+
+      # The Phase 1 gate. A cold F1 instance can take a while to answer.
+      - name: Smoke test /health
+        run: |
+          URL="${{ steps.infra.outputs.appServiceUrl }}/health"
+          echo "Probing $URL"
+          for attempt in $(seq 1 12); do
+            CODE=$(curl -fsS -o /tmp/body -w '%{http_code}' "$URL" 2>/dev/null || echo "000")
+            if [ "$CODE" = "200" ]; then
+              echo "Healthy after ${attempt} attempt(s): $(cat /tmp/body)"
+              exit 0
+            fi
+            echo "attempt ${attempt}: HTTP ${CODE} - retrying in 15s"
+            sleep 15
+          done
+          echo "::error::/health never returned 200 - failing the deployment"
+          exit 1
+
+      - name: Deployment summary
+        if: success()
+        run: |
+          {
+            echo "### Deployed"
+            echo ""
+            echo "| Resource | Value |"
+            echo "| --- | --- |"
+            echo "| App Service | \`${{ steps.infra.outputs.appServiceName }}\` |"
+            echo "| URL | ${{ steps.infra.outputs.appServiceUrl }} |"
+            echo "| SQL Server | \`${{ steps.infra.outputs.sqlServerFqdn }}\` |"
+          } >> "$GITHUB_STEP_SUMMARY"

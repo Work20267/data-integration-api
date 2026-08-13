@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DataIntegration.Core\DataIntegration.Core.csproj" />
+    <ProjectReference Include="..\DataIntegration.Infrastructure\DataIntegration.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <!-- Integration tests reach Program via WebApplicationFactory. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="DataIntegration.IntegrationTests" />
+  </ItemGroup>
+
+</Project>
