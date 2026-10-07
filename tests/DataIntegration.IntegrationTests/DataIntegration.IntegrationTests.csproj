@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Testcontainers.MsSql" />
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
@@ -19,6 +20,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\DataIntegration.Api\DataIntegration.Api.csproj" />
+    <ProjectReference Include="..\..\src\DataIntegration.Infrastructure\DataIntegration.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

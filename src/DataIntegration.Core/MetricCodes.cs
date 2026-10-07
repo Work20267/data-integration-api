@@ -20,4 +20,11 @@ public static class MetricCodes
     public const string PressureSeaLevel = "PRESSURE_SEALEVEL";
     public const string Altitude = "ALTITUDE";
     public const string NoiseLaeq = "NOISE_LAEQ";
+
+    /// <summary>
+    /// Counts per minute from a Geiger-Müller tube. Added after a real batch
+    /// dead-lettered 63 rows from a "Radiation Si22G" sensor nobody had written
+    /// rules for — the network carries more than air quality.
+    /// </summary>
+    public const string RadiationCpm = "RADIATION_CPM";
 }

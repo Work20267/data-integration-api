@@ -1,0 +1,96 @@
+using Microsoft.Extensions.Logging;
+
+namespace DataIntegration.Infrastructure.Logging;
+
+/// <summary>
+/// Source-generated log messages.
+/// </summary>
+/// <remarks>
+/// The generator emits a strongly-typed, allocation-free call site per message,
+/// so arguments are never boxed and nothing is formatted when the level is
+/// disabled. This is what CA1848 and CA1873 ask for, and it keeps the ingest
+/// hot path free of logging overhead.
+/// </remarks>
+internal static partial class InfrastructureLog
+{
+    // ---- upstream readers (1000-1099) ----
+    [LoggerMessage(EventId = 1000, Level = LogLevel.Information,
+        Message = "Fetching live feed from {url}")]
+    public static partial void FetchingLiveFeed(ILogger logger, Uri url);
+
+    [LoggerMessage(EventId = 1001, Level = LogLevel.Information,
+        Message = "Live feed yielded {count} records")]
+    public static partial void LiveFeedYielded(ILogger logger, int count);
+
+    [LoggerMessage(EventId = 1002, Level = LogLevel.Warning,
+        Message = "Live feed exceeded the {cap} record cap; stopping early")]
+    public static partial void LiveFeedCapExceeded(ILogger logger, int cap);
+
+    // ---- archive source (1050-1099) ----
+    [LoggerMessage(EventId = 1050, Level = LogLevel.Information,
+        Message = "Listing archive day {url}")]
+    public static partial void ArchiveListing(ILogger logger, Uri url);
+
+    [LoggerMessage(EventId = 1051, Level = LogLevel.Warning,
+        Message = "Archive listing for {date} contained no matching files")]
+    public static partial void ArchiveEmpty(ILogger logger, string date);
+
+    [LoggerMessage(EventId = 1052, Level = LogLevel.Information,
+        Message = "Selected {count} archive files for {date} (capped deliberately)")]
+    public static partial void ArchiveSelected(ILogger logger, int count, string date);
+
+    [LoggerMessage(EventId = 1053, Level = LogLevel.Warning,
+        Message = "Archive file {file} was unavailable; continuing with the rest")]
+    public static partial void ArchiveFileSkipped(ILogger logger, Exception exception, string file);
+
+    [LoggerMessage(EventId = 1054, Level = LogLevel.Information,
+        Message = "Archive yielded {rows} rows from {files} files")]
+    public static partial void ArchiveCompleted(ILogger logger, int rows, int files);
+
+    // ---- ingest pipeline (1100-1199) ----
+    [LoggerMessage(EventId = 1100, Level = LogLevel.Information,
+        Message = "Idempotency key {key} already processed as batch {batchId}; skipping")]
+    public static partial void IdempotentSkip(ILogger logger, string key, Guid batchId);
+
+    [LoggerMessage(EventId = 1101, Level = LogLevel.Information,
+        Message = "Batch {batchId} staged {rows} rows from {source} in {seconds}s")]
+    public static partial void BatchStaged(
+        ILogger logger, Guid batchId, int rows, string source, double seconds);
+
+    [LoggerMessage(EventId = 1102, Level = LogLevel.Error,
+        Message = "Batch {batchId} failed after staging {rows} rows from {source}; rows retained for reprocessing")]
+    public static partial void BatchFailed(
+        ILogger logger, Exception exception, Guid batchId, int rows, string source);
+
+    // ---- transformation (1200-1299) ----
+    [LoggerMessage(EventId = 1200, Level = LogLevel.Information,
+        Message = "Batch {batchId} transformed: {read} read, {canonical} canonical, {deadLettered} dead-lettered in {seconds}s")]
+    public static partial void BatchTransformed(
+        ILogger logger, Guid batchId, int read, int canonical, int deadLettered, double seconds);
+
+    [LoggerMessage(EventId = 1201, Level = LogLevel.Information,
+        Message = "Dead letter {id} replayed into batch {batchId}")]
+    public static partial void DeadLetterReplayed(ILogger logger, long id, Guid batchId);
+
+    // ---- scheduled sync (1300-1399) ----
+    [LoggerMessage(EventId = 1300, Level = LogLevel.Information,
+        Message = "Scheduled sync is disabled; no background polling will run")]
+    public static partial void SyncDisabled(ILogger logger);
+
+    [LoggerMessage(EventId = 1301, Level = LogLevel.Information,
+        Message = "Scheduled sync starting for {sources} source(s) every {minutes} minute(s)")]
+    public static partial void SyncStarting(ILogger logger, int sources, int minutes);
+
+    [LoggerMessage(EventId = 1302, Level = LogLevel.Information,
+        Message = "Sync cycle for {source}: {staged} staged, {canonical} canonical, {deadLettered} dead-lettered")]
+    public static partial void SyncCycleCompleted(
+        ILogger logger, string source, int staged, int canonical, int deadLettered);
+
+    [LoggerMessage(EventId = 1303, Level = LogLevel.Debug,
+        Message = "Sync cycle for {source} skipped: this window was already ingested")]
+    public static partial void SyncCycleSkipped(ILogger logger, string source);
+
+    [LoggerMessage(EventId = 1304, Level = LogLevel.Error,
+        Message = "Sync cycle for {source} failed; the worker continues and the next tick retries")]
+    public static partial void SyncCycleFailed(ILogger logger, Exception exception, string source);
+}

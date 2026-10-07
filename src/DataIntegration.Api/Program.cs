@@ -1,7 +1,13 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
+using DataIntegration.Api;
 using DataIntegration.Core.Observability;
 using DataIntegration.Infrastructure;
+using DataIntegration.Infrastructure.Ingestion;
+using DataIntegration.Infrastructure.Sources.SensorCommunity;
+using DataIntegration.Infrastructure.Sync;
+using DataIntegration.Infrastructure.Transformation;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.RateLimiting;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
@@ -21,6 +27,54 @@ builder.Services.AddDataIntegrationPersistence(connectionString);
 
 builder.Services.AddHealthChecks()
     .AddSqlServer(connectionString, name: "sql", tags: ["ready"]);
+
+// ---- ingestion ------------------------------------------------------------
+// Options are bound here because the host owns configuration; Infrastructure
+// only wires services. ValidateOnStart means a bad value fails the deployment
+// rather than the first request that happens to hit it.
+builder.Services.AddOptions<SensorCommunityOptions>()
+    .Bind(builder.Configuration.GetSection(SensorCommunityOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<IngestOptions>()
+    .Bind(builder.Configuration.GetSection(IngestOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<TransformOptions>()
+    .Bind(builder.Configuration.GetSection(TransformOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<SyncOptions>()
+    .Bind(builder.Configuration.GetSection(SyncOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddDataIntegrationIngestion();
+builder.Services.AddDataIntegrationTransformation();
+builder.Services.AddDataIntegrationSync();
+
+// ---- rate limiting --------------------------------------------------------
+// Only the expensive endpoints are limited. An ingest pulls ~8.5 MB from a
+// volunteer-funded upstream, so protecting them protects someone else's
+// infrastructure as much as ours. Health probes stay unlimited on purpose:
+// throttling a liveness check would make App Service recycle a healthy app.
+builder.Services.AddRateLimiter(limiter =>
+{
+    limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    limiter.AddFixedWindowLimiter(RateLimitPolicies.Expensive, window =>
+    {
+        window.PermitLimit = 5;
+        window.Window = TimeSpan.FromMinutes(1);
+
+        // No queue: a caller that is over the limit should be told immediately
+        // rather than held open while an 8.5 MB download is already in flight.
+        window.QueueLimit = 0;
+    });
+});
 
 // ---- telemetry ------------------------------------------------------------
 // OpenTelemetry does the instrumentation; Azure Monitor is only an exporter.
@@ -52,6 +106,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+app.UseRateLimiter();
 
 // Liveness carries no dependency checks on purpose. Azure SQL serverless
 // auto-pauses after 60 minutes idle, and a /health that touched the database
