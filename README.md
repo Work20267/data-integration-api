@@ -5,11 +5,11 @@ structured data from mismatched external sources into a canonical model backed b
 Azure SQL — with idempotent upserts, per-row error isolation, and dead-letter replay
 so a partial failure never means data loss.
 
-> **Status: Phase 5 (second source).** Deployed on Azure, with **both** sources
-> landing in one canonical model — 17,603 readings from the live JSON feed and
-> 4,560 from the CSV archive. Re-processing the same observations produces
-> **zero new rows**. Scheduled sync, the chaos test and the ops layer are
-> Phases 5–7. See [Roadmap](#roadmap).
+> **Status: Phase 6 (chaos-tested).** Deployed on Azure, both sources landing in
+> one canonical model, and the two guarantees the project rests on are proven
+> against a **real SQL Server** rather than a mock: processing the same
+> observation twice produces one row, and a failure mid-batch loses nothing.
+> Observability and the runbook are Phase 7. See [Roadmap](#roadmap).
 
 ## Data sources
 
@@ -185,7 +185,34 @@ Three things make it work, and all three are easy to get wrong:
 
 See [ADR 006](docs/adr/006-two-sources-one-canonical-model.md), which also
 records how the proof was constructed and why the cross-source version of it
-cannot be run on demand.
+cannot be run against the live upstream on demand.
+
+### Chaos tests
+
+Those two claims are properties of **SQL Server** — of `MERGE`, `HOLDLOCK`, a
+unique index, and what a transaction commits before a failure. A faked writer
+would assert them against my own assumptions about those mechanisms, which is
+the thing in doubt. So the critical tests run against a real SQL Server in a
+Testcontainers instance, migrated with the same migrations CD applies to Azure:
+
+| Test | Asserts |
+|---|---|
+| Same observations twice | 500 rows, then identical payloads in a **new batch** → counts unchanged, zero duplicate keys |
+| **Failure mid-batch** | 1,000 rows, writer throws after 2 of 5 chunks → 400 committed survive, exactly 600 stay `Pending`, retry processes exactly those 600, final 1,000 rows, **zero duplicates** |
+| Both sources converge | 100 live observations, then the same 100 in CSV → **100 rows, not 200** |
+
+The failure is deterministic rather than a container kill. The fixture *can*
+stop the container, but that makes the test depend on the kill landing between
+two specific chunks — and a flaky test is worse than no test. The invariant is
+the same either way.
+
+**Writing the third test found a real bug.** The CSV parser emits
+`Country = null` meaning "this source does not say", but the `MERGE` did
+`target.Country = source.Country` — so ingesting the archive after the live feed
+would have silently erased the country on every overlapping reading. No
+exception, no dead letter, no count discrepancy; it would have looked like clean
+data. Fixed with `COALESCE`, and now asserted directly. See
+[ADR 008](docs/adr/008-proving-zero-loss-against-real-sql-server.md).
 
 ### Scheduled sync
 

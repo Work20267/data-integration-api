@@ -59,11 +59,15 @@ public class CanonicalWriter(DataIntegrationDbContext context) : ICanonicalWrite
             ON target.ExternalKey = source.ExternalKey
         WHEN MATCHED THEN UPDATE SET
             target.SensorModel      = source.SensorModel,
-            target.LocationId       = source.LocationId,
-            target.Latitude         = source.Latitude,
-            target.Longitude        = source.Longitude,
-            target.Country          = source.Country,
-            target.IsIndoor         = source.IsIndoor,
+            -- COALESCE, not assignment: a null means "this source does not say",
+            -- not "this value is now unknown". The CSV archive carries neither
+            -- country nor the indoor flag, so a plain assignment would erase what
+            -- the live feed supplied for the same reading.
+            target.LocationId       = COALESCE(source.LocationId, target.LocationId),
+            target.Latitude         = COALESCE(source.Latitude,   target.Latitude),
+            target.Longitude        = COALESCE(source.Longitude,  target.Longitude),
+            target.Country          = COALESCE(source.Country,    target.Country),
+            target.IsIndoor         = COALESCE(source.IsIndoor,   target.IsIndoor),
             target.ObservedAtUtc    = source.ObservedAtUtc,
             target.LastSourceKey    = source.LastSourceKey,
             target.LastUpdatedAtUtc = @Now
