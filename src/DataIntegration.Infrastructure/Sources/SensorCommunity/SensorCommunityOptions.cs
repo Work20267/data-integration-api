@@ -42,4 +42,33 @@ public class SensorCommunityOptions
     /// </summary>
     [Range(100, 1_000_000)]
     public int MaxRecordsPerCall { get; set; } = 100_000;
+
+    // ---- archive source ----------------------------------------------------
+
+    /// <summary>
+    /// Day to ingest from the archive. Null means yesterday (UTC) — today's files
+    /// do not exist yet, since the archive is published a day behind.
+    /// </summary>
+    public DateOnly? ArchiveDate { get; set; }
+
+    /// <summary>
+    /// Files fetched per ingest. A single day holds ~17,800 of them, and pulling
+    /// them all would be abusive to a volunteer-funded host — so this is a hard
+    /// cap, not a page size. See ADR 001.
+    /// </summary>
+    [Range(1, 500)]
+    public int ArchiveMaxFiles { get; set; } = 25;
+
+    /// <summary>
+    /// Pause between file requests. Deliberate politeness rather than tuning:
+    /// 25 files at 250 ms costs us six seconds and the host almost nothing.
+    /// </summary>
+    [Range(0, 5_000)]
+    public int ArchiveFetchDelayMs { get; set; } = 250;
+
+    /// <summary>
+    /// Restricts which sensor models are fetched, by the token in the filename
+    /// (<c>sds011</c>, <c>bme280</c>, <c>dht22</c>…). Empty means any.
+    /// </summary>
+    public IList<string> ArchiveSensorModels { get; } = [];
 }

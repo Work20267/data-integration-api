@@ -26,6 +26,27 @@ internal static partial class InfrastructureLog
         Message = "Live feed exceeded the {cap} record cap; stopping early")]
     public static partial void LiveFeedCapExceeded(ILogger logger, int cap);
 
+    // ---- archive source (1050-1099) ----
+    [LoggerMessage(EventId = 1050, Level = LogLevel.Information,
+        Message = "Listing archive day {url}")]
+    public static partial void ArchiveListing(ILogger logger, Uri url);
+
+    [LoggerMessage(EventId = 1051, Level = LogLevel.Warning,
+        Message = "Archive listing for {date} contained no matching files")]
+    public static partial void ArchiveEmpty(ILogger logger, string date);
+
+    [LoggerMessage(EventId = 1052, Level = LogLevel.Information,
+        Message = "Selected {count} archive files for {date} (capped deliberately)")]
+    public static partial void ArchiveSelected(ILogger logger, int count, string date);
+
+    [LoggerMessage(EventId = 1053, Level = LogLevel.Warning,
+        Message = "Archive file {file} was unavailable; continuing with the rest")]
+    public static partial void ArchiveFileSkipped(ILogger logger, Exception exception, string file);
+
+    [LoggerMessage(EventId = 1054, Level = LogLevel.Information,
+        Message = "Archive yielded {rows} rows from {files} files")]
+    public static partial void ArchiveCompleted(ILogger logger, int rows, int files);
+
     // ---- ingest pipeline (1100-1199) ----
     [LoggerMessage(EventId = 1100, Level = LogLevel.Information,
         Message = "Idempotency key {key} already processed as batch {batchId}; skipping")]
