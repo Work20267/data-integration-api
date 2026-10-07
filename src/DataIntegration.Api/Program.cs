@@ -4,8 +4,10 @@ using DataIntegration.Core.Observability;
 using DataIntegration.Infrastructure;
 using DataIntegration.Infrastructure.Ingestion;
 using DataIntegration.Infrastructure.Sources.SensorCommunity;
+using DataIntegration.Infrastructure.Persistence;
 using DataIntegration.Infrastructure.Sync;
 using DataIntegration.Infrastructure.Transformation;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.RateLimiting;
 using OpenTelemetry.Metrics;
@@ -102,6 +104,21 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+
+    // Local convenience only, so `docker compose up` yields a usable database
+    // rather than an API talking to an empty one.
+    //
+    // Deliberately never in production: CD applies a reviewed, idempotent script
+    // *before* the app deploys, so new code never starts against an old schema.
+    // Migrating at startup would also mean several instances racing the same DDL.
+    await using (var scope = app.Services.CreateAsyncScope())
+    {
+        var database = scope.ServiceProvider
+            .GetRequiredService<DataIntegrationDbContext>()
+            .Database;
+
+        await database.MigrateAsync();
+    }
 }
 
 app.UseExceptionHandler();
