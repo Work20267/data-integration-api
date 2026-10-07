@@ -71,4 +71,26 @@ internal static partial class InfrastructureLog
     [LoggerMessage(EventId = 1201, Level = LogLevel.Information,
         Message = "Dead letter {id} replayed into batch {batchId}")]
     public static partial void DeadLetterReplayed(ILogger logger, long id, Guid batchId);
+
+    // ---- scheduled sync (1300-1399) ----
+    [LoggerMessage(EventId = 1300, Level = LogLevel.Information,
+        Message = "Scheduled sync is disabled; no background polling will run")]
+    public static partial void SyncDisabled(ILogger logger);
+
+    [LoggerMessage(EventId = 1301, Level = LogLevel.Information,
+        Message = "Scheduled sync starting for {sources} source(s) every {minutes} minute(s)")]
+    public static partial void SyncStarting(ILogger logger, int sources, int minutes);
+
+    [LoggerMessage(EventId = 1302, Level = LogLevel.Information,
+        Message = "Sync cycle for {source}: {staged} staged, {canonical} canonical, {deadLettered} dead-lettered")]
+    public static partial void SyncCycleCompleted(
+        ILogger logger, string source, int staged, int canonical, int deadLettered);
+
+    [LoggerMessage(EventId = 1303, Level = LogLevel.Debug,
+        Message = "Sync cycle for {source} skipped: this window was already ingested")]
+    public static partial void SyncCycleSkipped(ILogger logger, string source);
+
+    [LoggerMessage(EventId = 1304, Level = LogLevel.Error,
+        Message = "Sync cycle for {source} failed; the worker continues and the next tick retries")]
+    public static partial void SyncCycleFailed(ILogger logger, Exception exception, string source);
 }

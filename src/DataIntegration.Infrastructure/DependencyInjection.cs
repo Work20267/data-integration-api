@@ -1,12 +1,15 @@
 using DataIntegration.Core.Ingestion;
+using DataIntegration.Core.Sync;
 using DataIntegration.Core.Transformation;
 using DataIntegration.Infrastructure.Ingestion;
 using DataIntegration.Infrastructure.Observability;
 using DataIntegration.Infrastructure.Persistence;
 using DataIntegration.Infrastructure.Sources.SensorCommunity;
+using DataIntegration.Infrastructure.Sync;
 using DataIntegration.Infrastructure.Transformation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Polly;
 
 namespace DataIntegration.Infrastructure;
@@ -131,6 +134,28 @@ public static class DependencyInjection
         services.AddScoped<DeadLetterReplayService>();
 
         services.AddSingleton<TransformMetrics>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the scheduled sync worker and the watermark store.
+    /// </summary>
+    /// <remarks>
+    /// The worker reads <see cref="SyncOptions.Enabled"/> at startup and returns
+    /// immediately when it is off, so registering it unconditionally costs
+    /// nothing and keeps the composition root free of conditionals.
+    /// </remarks>
+    public static IServiceCollection AddDataIntegrationSync(this IServiceCollection services)
+    {
+        services.AddScoped<ISyncWatermarkStore, SyncWatermarkStore>();
+        services.AddScoped<SyncCycle>();
+
+        // Injected rather than using DateTime.UtcNow, so the worker's timing can
+        // be driven by a fake clock in tests instead of by real elapsed time.
+        services.TryAddSingleton(TimeProvider.System);
+
+        services.AddHostedService<SyncWorker>();
 
         return services;
     }
