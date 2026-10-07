@@ -187,6 +187,33 @@ See [ADR 006](docs/adr/006-two-sources-one-canonical-model.md), which also
 records how the proof was constructed and why the cross-source version of it
 cannot be run on demand.
 
+### Scheduled sync
+
+`SyncWorker` runs ingest → transform → advance-watermark per source on a timer.
+`GET /api/v1/sync/status` reports whether it is enabled and how far each source
+has got.
+
+**It is off by default**, which is a decision rather than an oversight: the App
+Service free tier allows 60 CPU-minutes per day, and a loop polling an 8.5 MB
+feed would exhaust it until the site began returning 403 — besides being rude to
+a volunteer-funded upstream.
+
+```jsonc
+// appsettings.json
+"Sync": { "Enabled": true, "IntervalMinutes": 10, "Sources": [ "json-live" ] }
+```
+
+**There is no in-memory queue between ingest and transform, deliberately.** The
+staging table already *is* the queue, and unlike a `Channel<T>` it survives a
+restart, can be inspected with a `SELECT`, and is shared across instances.
+Backpressure — the usual reason to reach for a channel — is already provided by
+the chunk size. See [ADR 007](docs/adr/007-the-staging-table-is-the-queue.md).
+
+A cycle that fails returns a result rather than throwing. An exception escaping
+a `BackgroundService` stops it silently or brings the host down, so **one bad
+cycle would end all future syncing**; instead the worker logs it and the next
+tick retries.
+
 ### Adding a source
 
 Supporting the CSV archive required a parser, a reader, and two DI lines. The
@@ -209,10 +236,12 @@ why all 4,560 archive readings are BME280 despite the filter also allowing
 `sds011`. The reader cannot currently tell a short day from a short response.
 See ADR 006.
 
-**Sync is manual.** Ingest and transform are separate endpoint calls. A
-`BackgroundService` driving them on a schedule, using `SyncWatermark` to resume,
-is the remaining half of Phase 5 — the table and the resume semantics exist, the
-worker does not.
+**No cross-instance coordination.** Two instances with sync enabled would both
+run cycles. The per-minute idempotency key makes the collision harmless rather
+than duplicating data, but that is luck rather than design — a real
+multi-instance deployment wants a distributed lock. See ADR 007.
+
+**No retention policy.** Staging rows and dead letters accumulate indefinitely.
 
 ### Health endpoints
 

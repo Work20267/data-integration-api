@@ -25,6 +25,11 @@ internal sealed class FakeUpstreamReader(string sourceKey, int rowCount) : IUpst
 
         for (var i = 0; i < rowCount; i++)
         {
+            // Real readers honour the token between rows; so must this one, or
+            // tests covering shutdown would pass against a fake that cannot
+            // actually be cancelled.
+            cancellationToken.ThrowIfCancellationRequested();
+
             if (ThrowAfter is int limit && i == limit)
             {
                 throw new HttpRequestException("upstream went away");
