@@ -5,8 +5,39 @@ structured data from mismatched external sources into a canonical model backed b
 Azure SQL — with idempotent upserts, per-row error isolation, and dead-letter replay
 so a partial failure never means data loss.
 
-> **Status: Phase 1 (foundation).** The service deploys and reports health; the
-> integration engine lands in Phases 3–5. See [Roadmap](#roadmap).
+> **Status: Phase 2 (data layer).** Infrastructure is deployed on Azure and the
+> canonical schema is live in Azure SQL. The ingestion, transformation and sync
+> engine lands in Phases 3–5. See [Roadmap](#roadmap).
+
+## Data sources
+
+Two feeds from [Sensor.Community](https://sensor.community), a volunteer-run
+network of DIY air-quality sensors (ESP8266 boards with SDS011 dust sensors and
+BME280 climate sensors). Data is ODbL / CC-BY-SA.
+
+| | Source 1 | Source 2 |
+|---|---|---|
+| Endpoint | `data.sensor.community/static/v2/data.json` | `archive.sensor.community/<date>/` |
+| Shape | Nested JSON; measurements are a `sensordatavalues` array of `{value_type, value}` pairs | Flat, semicolon-delimited CSV with **different columns per sensor model** |
+| Volume | ~17,700 readings per 5-minute window | ~17,800 files/day, several hundred rows each |
+| Auth | None | None |
+
+They were chosen for three properties:
+
+1. **Structurally different, not cosmetically.** A key-value array against flat
+   per-model columns means the transformation layer has real work to do.
+2. **The field names already disagree.** The same measurement is
+   `pressure_at_sealevel` in the JSON and `pressure_sealevel` in the CSV. That is
+   why mapping lives in the `SourceMapping` table rather than in code.
+3. **They overlap on purpose.** The archive is where the live feed lands a day
+   later, so re-ingesting a day already streamed live must produce *zero* new
+   rows. Idempotency is a requirement the data imposes, not a contrived test.
+
+One upstream trap worth knowing: in this schema `P1` is **PM10** and `P2` is
+**PM2.5** — `P1` is not PM1, which is `P0`. Mapping by name rather than by
+meaning is silently wrong. See [ADR 001](docs/adr/001-data-sources.md).
+
+The archive is volunteer-funded: fetch politely, cache locally, and throttle.
 
 ## Architecture
 
@@ -34,27 +65,44 @@ Design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 ## Running locally
 
-Requires the [.NET 10 SDK](https://dotnet.microsoft.com/download) and Docker.
+Needs only **Git and Docker** — no .NET SDK required:
 
 ```bash
-# SQL Server for local development (Phase 2 onward)
-docker run -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=Local_Dev_P@ss1" \
-  -p 1433:1433 --name sqldev -d mcr.microsoft.com/mssql/server:2022-latest
+git clone https://github.com/Work20267/data-integration-api
+cd data-integration-api
+docker compose up
+```
 
+That brings up SQL Server and the API together; the API waits on SQL's health
+check, so it never starts against a database that is not yet accepting queries.
+It then serves `/health` on port 8080, with OpenAPI at `/openapi/v1.json`.
+
+To work on the code you also need the [.NET 10 SDK](https://dotnet.microsoft.com/download)
+(the exact version is pinned in `global.json`):
+
+```bash
+docker compose up sql -d          # database only
 dotnet restore
-dotnet build
 dotnet test
+dotnet ef database update --project src/DataIntegration.Infrastructure \
+                          --startup-project src/DataIntegration.Api
 dotnet run --project src/DataIntegration.Api
 ```
 
-The API then serves `/health`, and OpenAPI at `/openapi/v1.json` in Development.
+The local SA password in `compose.yaml` and `appsettings.Development.json` is a
+throwaway container credential, not a secret. No production credential exists in
+this repository at all — see [Infrastructure](#infrastructure).
 
-Local secrets go in User Secrets, never in `appsettings.json`:
+### Health endpoints
 
-```bash
-dotnet user-secrets --project src/DataIntegration.Api \
-  set "ConnectionStrings:Default" "Server=localhost,1433;..."
-```
+| Endpoint | Checks | Used by |
+|---|---|---|
+| `/health` | Nothing — liveness only | CD smoke test, App Service probe |
+| `/health/ready` | SQL connectivity | Readiness, reported but never gated on |
+
+Liveness deliberately touches no dependency: Azure SQL serverless auto-pauses
+after 60 minutes idle, and a probe that queried the database would report
+unhealthy during a resume — causing App Service to recycle a healthy app.
 
 ## Project layout
 

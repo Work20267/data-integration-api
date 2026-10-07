@@ -1,11 +1,47 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+using DataIntegration.Core.Observability;
+using DataIntegration.Infrastructure;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 
-// Phase 1: liveness only. Phase 2 adds a SQL readiness check here.
-builder.Services.AddHealthChecks();
+var connectionString = builder.Configuration.GetConnectionString("Default")
+    ?? throw new InvalidOperationException(
+        "ConnectionStrings:Default is not configured. Locally this comes from " +
+        "appsettings.Development.json or compose.yaml; in Azure it is an App " +
+        "Service setting using the managed identity and carries no password.");
+
+builder.Services.AddDataIntegrationPersistence(connectionString);
+
+builder.Services.AddHealthChecks()
+    .AddSqlServer(connectionString, name: "sql", tags: ["ready"]);
+
+// ---- telemetry ------------------------------------------------------------
+// OpenTelemetry does the instrumentation; Azure Monitor is only an exporter.
+// Swapping backend later is a change here, not a re-instrumentation project.
+var telemetry = builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing
+        .AddSource(DiagnosticNames.ActivitySource)
+        // Statement text is not captured by default in this instrumentation, which
+        // is what we want: ingested values must not leak into traces. Only the
+        // operation, target and duration are exported.
+        .AddSqlClientInstrumentation())
+    .WithMetrics(metrics => metrics
+        .AddMeter(DiagnosticNames.Meter));
+
+// Exporting is conditional: local runs and CI have no App Insights, and
+// UseAzureMonitor without a connection string throws at startup.
+var appInsights = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (!string.IsNullOrWhiteSpace(appInsights))
+{
+    telemetry.UseAzureMonitor(options => options.ConnectionString = appInsights);
+}
 
 var app = builder.Build();
 
@@ -17,8 +53,18 @@ if (app.Environment.IsDevelopment())
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
-// The deployment smoke test in cd.yml gates on this endpoint.
-app.MapHealthChecks("/health");
+// Liveness carries no dependency checks on purpose. Azure SQL serverless
+// auto-pauses after 60 minutes idle, and a /health that touched the database
+// would report unhealthy during a resume — causing App Service to recycle an
+// application that is in fact fine. The CD smoke test gates on this endpoint.
+app.MapHealthChecks("/health", new HealthCheckOptions { Predicate = _ => false });
+
+// Readiness is where dependencies are asserted: can we actually reach SQL.
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready"),
+});
+
 app.MapControllers();
 
 app.Run();

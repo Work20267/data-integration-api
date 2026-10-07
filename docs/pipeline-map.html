@@ -1,0 +1,601 @@
+<title>DataIntegration Pipeline Map</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --ground: #F1F3F5;
+    --surface: #FFFFFF;
+    --ink: #101820;
+    --ink-2: #4A5660;
+    --ink-3: #79868F;
+    --hair: #D3DAE0;
+    --accent: #0E7C86;
+    --accent-soft: #D9EDEF;
+    --warn: #9C580B;
+    --warn-soft: #F5E7D4;
+
+    --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+    --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #0D1317;
+      --surface: #151E23;
+      --ink: #E2E9ED;
+      --ink-2: #9EABB4;
+      --ink-3: #6E7C87;
+      --hair: #28333A;
+      --accent: #40BAC6;
+      --accent-soft: #10323A;
+      --warn: #D89534;
+      --warn-soft: #33260F;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0D1317;
+    --surface: #151E23;
+    --ink: #E2E9ED;
+    --ink-2: #9EABB4;
+    --ink-3: #6E7C87;
+    --hair: #28333A;
+    --accent: #40BAC6;
+    --accent-soft: #10323A;
+    --warn: #D89534;
+    --warn-soft: #33260F;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    line-height: 1.55;
+    padding-block: 40px 64px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .wrap { max-width: 1060px; margin: 0 auto; }
+
+  /* ---- header ---- */
+  header { border-bottom: 2px solid var(--ink); padding-bottom: 18px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 8px;
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(28px, 5vw, 44px);
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 15px;
+    color: var(--ink-2);
+    max-width: 62ch;
+    margin: 12px 0 0;
+  }
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    margin: 18px 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-2);
+  }
+  .facts li { border: 1px solid var(--hair); border-radius: 3px; padding: 2px 7px; background: var(--surface); }
+
+  /* ---- figures ---- */
+  section { margin-top: 52px; }
+  .sec-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 6px;
+  }
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 21px;
+    letter-spacing: -0.01em;
+    margin: 0 0 4px;
+  }
+  .claim { font-size: 14px; color: var(--ink-2); max-width: 64ch; margin: 0 0 20px; }
+
+  figure { margin: 0; }
+  .plate {
+    background: var(--surface);
+    border: 1px solid var(--hair);
+    border-radius: 4px;
+    padding: 20px 18px;
+    overflow-x: auto;
+  }
+  .plate svg { display: block; max-width: 100%; height: auto; color: var(--ink); }
+  figcaption {
+    font-size: 13px;
+    color: var(--ink-2);
+    margin-top: 12px;
+    max-width: 68ch;
+  }
+
+  /* ---- spec strip ---- */
+  .spec {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1px;
+    margin: 18px 0 0;
+    background: var(--hair);
+    border: 1px solid var(--hair);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .spec > div { background: var(--surface); padding: 11px 13px; }
+  .spec dt {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin: 0 0 4px;
+  }
+  .spec dd {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink);
+    margin: 0;
+    line-height: 1.5;
+    word-break: break-word;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    margin: 14px 0 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-2);
+  }
+  .legend li { display: flex; align-items: center; gap: 7px; }
+  .swatch { width: 22px; height: 2px; flex: none; }
+  .swatch.acc { background: var(--accent); height: 3px; }
+  .swatch.neu { background: var(--ink-3); }
+
+  /* ---- svg shared ---- */
+  .lane-line { stroke: currentColor; stroke-opacity: 0.3; stroke-width: 1.5; }
+  .lane-main { stroke: var(--accent); stroke-width: 2.5; }
+  .lane-dev { stroke: currentColor; stroke-opacity: 0.75; stroke-width: 2; }
+  .dot { fill: currentColor; }
+  .dot-a { fill: var(--accent); }
+  .arw { fill: none; stroke: currentColor; stroke-opacity: 0.5; stroke-width: 1.3; }
+  .arw-a { fill: none; stroke: var(--accent); stroke-width: 1.5; }
+  .mk { fill: var(--ink-2); }
+  .mk-a { fill: var(--accent); }
+  .lbl { fill: var(--ink-2); font: 400 10px var(--mono); }
+  .lane-t { fill: var(--ink-3); font: 400 11px var(--mono); }
+  .lane-t-a { fill: var(--accent); font: 500 11px var(--mono); }
+  .box { fill: var(--surface); stroke: var(--hair); stroke-width: 1.2; }
+  .box-a { fill: var(--surface); stroke: var(--accent); stroke-width: 1.4; }
+  .job { fill: var(--ink); font: 500 12px var(--mono); }
+  .sub { fill: var(--ink-3); font: 400 10px var(--mono); }
+  .mono-t { fill: var(--ink-2); font: 400 11px var(--mono); }
+  .pill { fill: var(--accent-soft); stroke: none; }
+  .pill-t { fill: var(--accent); font: 500 10px var(--mono); }
+  .badge { fill: var(--accent-soft); stroke: none; }
+  .badge-t { fill: var(--accent); font: 500 9px var(--mono); }
+  .warn-box { fill: var(--warn-soft); stroke: var(--warn); stroke-width: 1.2; }
+  .warn-t { fill: var(--warn); font: 500 11px var(--mono); }
+  .warn-arw { fill: none; stroke: var(--warn); stroke-width: 1.3; stroke-dasharray: 5 3; }
+  .mk-w { fill: var(--warn); }
+  .gone { fill: none; stroke: var(--hair); stroke-width: 1.2; stroke-dasharray: 4 3; }
+  .gone-t { fill: var(--ink-3); font: 400 10px var(--mono); }
+  .strike { stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.9; }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 18px;
+    border-top: 1px solid var(--hair);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+
+  @media (max-width: 560px) {
+    .plate { padding: 14px 10px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">DataIntegration &middot; Phase 1</p>
+    <h1>Pipeline Map</h1>
+    <p class="lede">How code moves from a feature branch to a live Azure App Service in this
+      repository &mdash; the branch topology, both GitHub Actions workflows, and the two
+      credential-free hops that mean no password exists anywhere in the pipeline.</p>
+    <ul class="facts">
+      <li>commit 17794fe</li>
+      <li>.NET 10.0.400</li>
+      <li>Bicep 0.46.1</li>
+      <li>GitHub Actions</li>
+      <li>App Service (Linux)</li>
+      <li>Azure SQL serverless</li>
+    </ul>
+  </header>
+
+  <!-- ============ 1. BRANCHING ============ -->
+  <section>
+    <p class="sec-label">Branching</p>
+    <h2>Gitflow topology</h2>
+    <p class="claim">Which branch a commit lands on decides which pipeline runs: everything
+      triggers CI, but only <code>main</code> triggers a deployment.</p>
+
+    <figure>
+      <div class="plate">
+        <svg viewBox="0 0 1010 300" role="img"
+          aria-label="Gitflow branch diagram: develop branches from main; feature branches merge back to develop; a release branch is cut from develop and merged to both main and develop; a hotfix is cut from main and merged back to main and develop.">
+          <defs>
+            <marker id="g-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon class="mk" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <!-- lane labels -->
+          <text class="lane-t-a" x="8" y="56">main &middot; protected</text>
+          <text class="lane-t" x="8" y="110">hotfix/*</text>
+          <text class="lane-t" x="8" y="164">release/*</text>
+          <text class="lane-t" x="8" y="218">develop &middot; protected</text>
+          <text class="lane-t" x="8" y="272">feature/*</text>
+
+          <!-- lanes -->
+          <line class="lane-main" x1="140" y1="52" x2="950" y2="52" />
+          <line class="lane-line" x1="750" y1="106" x2="860" y2="106" />
+          <line class="lane-line" x1="510" y1="160" x2="640" y2="160" />
+          <line class="lane-dev" x1="140" y1="214" x2="950" y2="214" />
+          <line class="lane-line" x1="210" y1="268" x2="350" y2="268" />
+
+          <!-- develop forks from main at the root commit -->
+          <line class="lane-dev" x1="140" y1="52" x2="140" y2="214" />
+
+          <!-- commits -->
+          <circle class="dot-a" cx="140" cy="52" r="4.5" />
+          <circle class="dot-a" cx="660" cy="52" r="4.5" />
+          <circle class="dot-a" cx="880" cy="52" r="4.5" />
+
+          <circle class="dot" cx="140" cy="214" r="4" />
+          <circle class="dot" cx="380" cy="214" r="4" />
+          <circle class="dot" cx="490" cy="214" r="4" />
+          <circle class="dot" cx="660" cy="214" r="4" />
+          <circle class="dot" cx="880" cy="214" r="4" />
+          <circle class="dot" cx="950" cy="214" r="4" />
+
+          <circle class="dot" cx="210" cy="268" r="3.5" />
+          <circle class="dot" cx="280" cy="268" r="3.5" />
+          <circle class="dot" cx="350" cy="268" r="3.5" />
+
+          <circle class="dot" cx="510" cy="160" r="3.5" />
+          <circle class="dot" cx="575" cy="160" r="3.5" />
+          <circle class="dot" cx="640" cy="160" r="3.5" />
+
+          <circle class="dot" cx="750" cy="106" r="3.5" />
+          <circle class="dot" cx="805" cy="106" r="3.5" />
+          <circle class="dot" cx="860" cy="106" r="3.5" />
+
+          <!-- flows -->
+          <path class="arw" marker-end="url(#g-arw)" d="M 175 214 Q 195 214 206 262" />
+          <text class="lbl" x="170" y="250" text-anchor="end">branch</text>
+
+          <path class="arw" marker-end="url(#g-arw)" d="M 350 268 Q 372 268 380 220" />
+          <text class="lbl" x="390" y="256">PR merge</text>
+
+          <path class="arw" marker-end="url(#g-arw)" d="M 490 214 Q 506 214 512 166" />
+          <text class="lbl" x="484" y="188" text-anchor="end">cut release</text>
+
+          <path class="arw-a" marker-end="url(#g-arw)" d="M 640 160 Q 660 160 660 60" />
+          <text class="lbl" x="628" y="112" text-anchor="end">merge &rarr; main</text>
+
+          <path class="arw" marker-end="url(#g-arw)" d="M 640 160 Q 660 160 660 208" />
+          <text class="lbl" x="672" y="204">back-merge</text>
+
+          <path class="arw" marker-end="url(#g-arw)" d="M 730 52 Q 748 52 750 100" />
+          <text class="lbl" x="724" y="84" text-anchor="end">hotfix</text>
+
+          <path class="arw-a" marker-end="url(#g-arw)" d="M 860 106 Q 880 106 880 60" />
+          <text class="lbl" x="892" y="84">merge &rarr; main</text>
+
+          <path class="arw" marker-end="url(#g-arw)" d="M 860 106 Q 882 106 880 208" />
+          <text class="lbl" x="892" y="180">back-merge</text>
+        </svg>
+      </div>
+      <figcaption>A release is merged to <code>main</code> <em>and</em> back into
+        <code>develop</code>, so the version bump never goes missing; a hotfix does the same from
+        the other direction. Both double-merges are the part people skip, and the reason
+        <code>develop</code> drifts behind production when they do.</figcaption>
+    </figure>
+
+    <ul class="legend">
+      <li><span class="swatch acc"></span> lands on <code>main</code> &rarr; CD deploys</li>
+      <li><span class="swatch neu"></span> lands elsewhere &rarr; CI only</li>
+    </ul>
+  </section>
+
+  <!-- ============ 2. CI ============ -->
+  <section>
+    <p class="sec-label">Continuous integration</p>
+    <h2>What runs on every push</h2>
+    <p class="claim">Two jobs start in parallel; a third waits on the Bicep lint and runs only
+      for pull requests, so a reviewer sees the infrastructure diff before approving the merge.</p>
+
+    <figure>
+      <div class="plate">
+        <svg viewBox="0 0 1010 400" role="img"
+          aria-label="CI workflow: triggers fan out to two parallel jobs, build-test and bicep-lint. The infra-what-if job depends on bicep-lint and runs only on pull requests.">
+          <defs>
+            <marker id="ci-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon class="mk" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <!-- triggers -->
+          <rect class="box" x="16" y="96" width="230" height="178" rx="5" />
+          <text class="sub" x="30" y="118">on:</text>
+          <text class="mono-t" x="30" y="142">pull_request:</text>
+          <text class="mono-t" x="30" y="160">&nbsp;&nbsp;main, develop</text>
+          <text class="mono-t" x="30" y="184">push:</text>
+          <text class="mono-t" x="30" y="202">&nbsp;&nbsp;develop</text>
+          <text class="mono-t" x="30" y="220">&nbsp;&nbsp;feature/**</text>
+          <text class="mono-t" x="30" y="238">&nbsp;&nbsp;release/** hotfix/**</text>
+          <text class="mono-t" x="30" y="262">workflow_dispatch</text>
+
+          <!-- fan-out junction -->
+          <line class="arw" x1="246" y1="185" x2="284" y2="185" />
+          <circle class="dot" cx="290" cy="185" r="3" />
+          <text class="lbl" x="250" y="176">on push / PR</text>
+
+          <path class="arw" marker-end="url(#ci-arw)" d="M 294 180 Q 312 180 326 118" />
+          <path class="arw" marker-end="url(#ci-arw)" d="M 294 190 Q 312 190 326 254" />
+
+          <!-- build-test -->
+          <rect class="box" x="330" y="40" width="330" height="152" rx="5" />
+          <text class="job" x="346" y="66">build-test</text>
+          <text class="sub" x="346" y="84">runs-on: ubuntu-latest</text>
+
+          <rect class="pill" x="346" y="98" width="64" height="28" rx="3" />
+          <text class="pill-t" x="378" y="116" text-anchor="middle">restore</text>
+          <line class="arw" x1="412" y1="112" x2="422" y2="112" marker-end="url(#ci-arw)" />
+
+          <rect class="pill" x="424" y="98" width="64" height="28" rx="3" />
+          <text class="pill-t" x="456" y="116" text-anchor="middle">build</text>
+          <line class="arw" x1="490" y1="112" x2="500" y2="112" marker-end="url(#ci-arw)" />
+
+          <rect class="pill" x="502" y="98" width="64" height="28" rx="3" />
+          <text class="pill-t" x="534" y="116" text-anchor="middle">test</text>
+          <line class="arw" x1="568" y1="112" x2="578" y2="112" marker-end="url(#ci-arw)" />
+
+          <rect class="pill" x="580" y="98" width="64" height="28" rx="3" />
+          <text class="pill-t" x="612" y="116" text-anchor="middle">publish</text>
+
+          <text class="sub" x="346" y="152">2 test projects &middot; xUnit v3</text>
+          <text class="sub" x="346" y="172">uploads &rarr; test-results.trx &middot; app package</text>
+
+          <!-- bicep-lint -->
+          <rect class="box" x="330" y="212" width="330" height="84" rx="5" />
+          <text class="job" x="346" y="238">bicep-lint</text>
+          <rect class="pill" x="346" y="250" width="148" height="28" rx="3" />
+          <text class="pill-t" x="420" y="268" text-anchor="middle">az bicep build</text>
+          <text class="sub" x="506" y="268">compile-time check</text>
+
+          <!-- needs edge -->
+          <line class="arw" x1="660" y1="254" x2="694" y2="254" marker-end="url(#ci-arw)" />
+          <text class="lbl" x="677" y="246" text-anchor="middle">needs</text>
+
+          <!-- infra-what-if -->
+          <rect class="box-a" x="700" y="212" width="294" height="140" rx="5" />
+          <text class="job" x="716" y="238">infra-what-if</text>
+          <rect class="badge" x="716" y="248" width="132" height="19" rx="3" />
+          <text class="badge-t" x="782" y="261" text-anchor="middle">pull_request only</text>
+          <text class="mono-t" x="716" y="292">azure/login@v2 &middot; OIDC</text>
+          <text class="mono-t" x="716" y="312">az deployment group what-if</text>
+          <text class="sub" x="716" y="336">&rarr; infra diff, visible in review</text>
+        </svg>
+      </div>
+      <figcaption><code>build-test</code> and <code>bicep-lint</code> have no dependency on one
+        another, so they occupy the same wall-clock. The <code>what-if</code> job needs Azure
+        credentials, which is why it only becomes a <em>required</em> status check after the
+        repository secrets exist &mdash; before that it would block every merge.</figcaption>
+    </figure>
+
+    <dl class="spec">
+      <div><dt>Workflow file</dt><dd>.github/workflows/ci.yml</dd></div>
+      <div><dt>Concurrency</dt><dd>ci-${{ github.ref }}<br>cancel-in-progress: true</dd></div>
+      <div><dt>Actions used</dt><dd>checkout@v4<br>setup-dotnet@v4<br>upload-artifact@v4<br>azure/login@v2</dd></div>
+      <div><dt>Artifact retention</dt><dd>7 days</dd></div>
+    </dl>
+  </section>
+
+  <!-- ============ 3. CD ============ -->
+  <section>
+    <p class="sec-label">Continuous deployment</p>
+    <h2>Push to main, six steps to live</h2>
+    <p class="claim">Infrastructure is deployed before the application, and the app's own name
+      comes back out of that deployment rather than being hard-coded anywhere.</p>
+
+    <figure>
+      <div class="plate">
+        <svg viewBox="0 0 880 566" role="img"
+          aria-label="CD workflow: a push to main runs publish, OIDC login, Bicep infrastructure deployment, app deployment, a health smoke test, and a job summary. The Bicep deployment outputs the App Service name, which feeds the app deployment step. A non-200 health response fails the deploy.">
+          <defs>
+            <marker id="cd-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon class="mk" points="0,1 10,5 0,9" />
+            </marker>
+            <marker id="cd-arw-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon class="mk-w" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <!-- trigger -->
+          <rect class="box-a" x="250" y="14" width="300" height="38" rx="5" />
+          <text class="job" x="400" y="38" text-anchor="middle">push &rarr; main</text>
+          <text class="sub" x="400" y="70" text-anchor="middle">environment: dev &middot; concurrency cd-dev</text>
+          <line class="arw-a" x1="400" y1="78" x2="400" y2="96" marker-end="url(#cd-arw)" />
+
+          <!-- steps -->
+          <rect class="box" x="250" y="100" width="300" height="50" rx="4" />
+          <text class="job" x="270" y="130">dotnet publish</text>
+          <text class="sub" x="566" y="130">&rarr; ./publish</text>
+          <line class="arw" x1="400" y1="150" x2="400" y2="171" marker-end="url(#cd-arw)" />
+
+          <rect class="box" x="250" y="175" width="300" height="50" rx="4" />
+          <text class="job" x="270" y="205">azure/login@v2</text>
+          <text class="sub" x="566" y="205">OIDC &middot; no stored secret</text>
+          <line class="arw" x1="400" y1="225" x2="400" y2="246" marker-end="url(#cd-arw)" />
+
+          <rect class="box" x="250" y="250" width="300" height="50" rx="4" />
+          <text class="job" x="270" y="280">azure/arm-deploy@v2</text>
+          <text class="sub" x="566" y="275">infra/main.bicep</text>
+          <text class="sub" x="566" y="291">dev.bicepparam</text>
+          <line class="arw" x1="400" y1="300" x2="400" y2="321" marker-end="url(#cd-arw)" />
+
+          <rect class="box" x="250" y="325" width="300" height="50" rx="4" />
+          <text class="job" x="270" y="355">azure/webapps-deploy@v3</text>
+          <text class="sub" x="566" y="355">zip deploy to App Service</text>
+          <line class="arw" x1="400" y1="375" x2="400" y2="396" marker-end="url(#cd-arw)" />
+
+          <rect class="box-a" x="250" y="400" width="300" height="50" rx="4" />
+          <text class="job" x="270" y="430">curl /health</text>
+          <text class="sub" x="566" y="424">12 attempts &times; 15s</text>
+          <text class="sub" x="566" y="440">cold F1 start is slow</text>
+          <line class="arw-a" x1="400" y1="450" x2="400" y2="471" marker-end="url(#cd-arw)" />
+
+          <rect class="box" x="250" y="475" width="300" height="50" rx="4" />
+          <text class="job" x="270" y="505">job summary</text>
+          <text class="sub" x="566" y="505">URL &middot; SQL FQDN</text>
+
+          <!-- outputs feed -->
+          <path class="arw" marker-end="url(#cd-arw)" d="M 250 276 Q 196 276 196 312 Q 196 350 244 350" />
+          <text class="lbl" x="186" y="306" text-anchor="end">appServiceName</text>
+          <text class="lbl" x="186" y="322" text-anchor="end">appServiceUrl</text>
+
+          <!-- failure edge -->
+          <path class="warn-arw" marker-end="url(#cd-arw-w)" d="M 550 436 Q 616 436 640 452" />
+          <rect class="warn-box" x="660" y="438" width="190" height="34" rx="4" />
+          <text class="warn-t" x="755" y="460" text-anchor="middle">deployment fails</text>
+          <text class="lbl" x="596" y="428" text-anchor="middle">non-200</text>
+        </svg>
+      </div>
+      <figcaption>The smoke test is a real gate, not a log line &mdash; if <code>/health</code>
+        never answers 200 within roughly three minutes the job exits non-zero, so a deploy that
+        produced a broken site is reported as a failed deploy. The same endpoint is asserted
+        locally by <code>HealthEndpointTests</code>, which means a regression fails CI before it
+        can ever reach this step.</figcaption>
+    </figure>
+
+    <dl class="spec">
+      <div><dt>Workflow file</dt><dd>.github/workflows/cd.yml</dd></div>
+      <div><dt>Trigger</dt><dd>push &rarr; main<br>workflow_dispatch</dd></div>
+      <div><dt>Concurrency</dt><dd>cd-dev<br>cancel-in-progress: false</dd></div>
+      <div><dt>Permissions</dt><dd>id-token: write<br>contents: read</dd></div>
+    </dl>
+  </section>
+
+  <!-- ============ 4. CREDENTIALS ============ -->
+  <section>
+    <p class="sec-label">Credential path</p>
+    <h2>Two hops, zero passwords</h2>
+    <p class="claim">Both trust boundaries are crossed with short-lived federated tokens rather
+      than stored credentials &mdash; which is why the list along the bottom is empty.</p>
+
+    <figure>
+      <div class="plate">
+        <svg viewBox="0 0 980 290" role="img"
+          aria-label="Credential path: GitHub Actions authenticates to Azure Resource Manager with an OIDC federated credential; Resource Manager provisions and deploys to App Service; App Service authenticates to Azure SQL with a user-assigned managed identity. No client secret, publish profile, or SQL admin password is stored anywhere.">
+          <defs>
+            <marker id="cr-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <polygon class="mk-a" points="0,1 10,5 0,9" />
+            </marker>
+          </defs>
+
+          <rect class="box" x="16" y="62" width="160" height="80" rx="5" />
+          <text class="job" x="96" y="98" text-anchor="middle">GitHub Actions</text>
+          <text class="sub" x="96" y="118" text-anchor="middle">ubuntu-latest</text>
+
+          <rect class="box" x="276" y="62" width="160" height="80" rx="5" />
+          <text class="job" x="356" y="92" text-anchor="middle">Azure</text>
+          <text class="job" x="356" y="110" text-anchor="middle">Resource Mgr</text>
+          <text class="sub" x="356" y="128" text-anchor="middle">rg-di-dev</text>
+
+          <rect class="box" x="536" y="62" width="160" height="80" rx="5" />
+          <text class="job" x="616" y="98" text-anchor="middle">App Service</text>
+          <text class="sub" x="616" y="118" text-anchor="middle">user-assigned MI</text>
+
+          <rect class="box" x="796" y="62" width="160" height="80" rx="5" />
+          <text class="job" x="876" y="98" text-anchor="middle">Azure SQL</text>
+          <text class="sub" x="876" y="118" text-anchor="middle">Entra-only auth</text>
+
+          <line class="arw-a" x1="176" y1="102" x2="268" y2="102" marker-end="url(#cr-arw)" />
+          <text class="lbl" x="222" y="92" text-anchor="middle">OIDC token</text>
+          <text class="gone-t" x="222" y="120" text-anchor="middle">federated</text>
+
+          <line class="arw" x1="436" y1="102" x2="528" y2="102" marker-end="url(#cr-arw)" />
+          <text class="lbl" x="482" y="92" text-anchor="middle">provisions</text>
+          <text class="gone-t" x="482" y="120" text-anchor="middle">+ deploys</text>
+
+          <line class="arw-a" x1="696" y1="102" x2="788" y2="102" marker-end="url(#cr-arw)" />
+          <text class="lbl" x="742" y="92" text-anchor="middle">managed identity</text>
+          <text class="gone-t" x="742" y="120" text-anchor="middle">token, not password</text>
+
+          <!-- what is absent -->
+          <text class="sub" x="16" y="206">not stored in the repository, in GitHub Secrets, or in Bicep:</text>
+
+          <rect class="gone" x="16" y="218" width="152" height="32" rx="4" />
+          <text class="gone-t" x="92" y="238" text-anchor="middle">client secret</text>
+          <line class="strike" x1="30" y1="234" x2="154" y2="234" />
+
+          <rect class="gone" x="182" y="218" width="164" height="32" rx="4" />
+          <text class="gone-t" x="264" y="238" text-anchor="middle">publish profile</text>
+          <line class="strike" x1="196" y1="234" x2="332" y2="234" />
+
+          <rect class="gone" x="360" y="218" width="204" height="32" rx="4" />
+          <text class="gone-t" x="462" y="238" text-anchor="middle">SQL admin password</text>
+          <line class="strike" x1="374" y1="234" x2="550" y2="234" />
+
+          <text class="sub" x="584" y="238">GitHub holds only non-secret IDs &mdash; client, tenant, subscription</text>
+        </svg>
+      </div>
+      <figcaption>Azure SQL is provisioned with <code>azureADOnlyAuthentication: true</code>, so a
+        SQL admin password is not merely unstored &mdash; it does not exist to be stolen. The App
+        Service connection string carries
+        <code>Authentication=Active Directory Managed Identity</code> and no credential field
+        at all.</figcaption>
+    </figure>
+
+    <dl class="spec">
+      <div><dt>GitHub secrets</dt><dd>AZURE_CLIENT_ID<br>AZURE_TENANT_ID<br>AZURE_SUBSCRIPTION_ID</dd></div>
+      <div><dt>GitHub variables</dt><dd>AZURE_RESOURCE_GROUP</dd></div>
+      <div><dt>Identity</dt><dd>id-di-dev<br>(user-assigned)</dd></div>
+      <div><dt>Bicep modules</dt><dd>monitoring &middot; sql &middot; appservice</dd></div>
+    </dl>
+  </section>
+
+  <footer>
+    Phase 1 of 7 &middot; the ingest, transform and sync stages shown in the README roadmap are not
+    yet built &middot; both workflows are committed but have not run: no GitHub remote and no Azure
+    resources exist yet.
+  </footer>
+
+</div>

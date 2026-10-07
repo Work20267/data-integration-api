@@ -54,3 +54,10 @@ dotnet_diagnostic.CA2007.severity = none   # ConfigureAwait in app code
 # Underscored test method names are the convention here.
 [tests/**/*.cs]
 dotnet_diagnostic.CA1707.severity = none
+
+# EF Core writes migration files; they are generated code and must not be held to
+# handwritten style rules. Without this, TreatWarningsAsErrors fails the build on
+# every new migration (IDE0161, CA1861) even though nobody authored those lines.
+[**/Persistence/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
