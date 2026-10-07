@@ -52,6 +52,7 @@ watch in silence. Start it, demo the app, return to it green. Cooking-show move.
 - [ ] CD run triggered and queued
 - [ ] Six tabs open
 - [ ] A known-green run bookmarked as fallback — see [Playbook](#when-it-breaks)
+- [ ] `chore/app-service-b1` still unmerged, so there is a live PR to open
 - [ ] Decided whether the repo is public (it is **private**; a link you send 404s)
 
 ---
@@ -142,10 +143,31 @@ something nobody anticipated.
 
 Four beats, in order. Do not just show a green tick.
 
-### Beat 1 · The pull request
+### Beat 1 · Open a pull request live
 
-Open a merged PR. Three checks: **Build & Test**, **Bicep Lint**,
-**Infra What-If**.
+A branch is already pushed and waiting: **`chore/app-service-b1`**. It moves the
+App Service plan from F1 to B1 — a real infrastructure change, not a doc edit,
+which is what makes Beat 2 worth watching.
+
+```bash
+gh pr create --base develop --head chore/app-service-b1 \
+  --title "chore(infra): move the App Service plan to B1" --fill
+```
+
+Checks start the moment the PR opens, and finish in about 90 seconds — long
+enough to talk over, short enough to watch.
+
+> **Why it was not already open.** `ci.yml` runs on pushes to `develop`,
+> `feature/**`, `release/**` and `hotfix/**`. A branch named `chore/…` matches
+> none of them, so pushing it triggered nothing and the PR fires the checks.
+> Everything is prepared; nothing is pre-run.
+
+**Do not merge it unless you want the bill.** B1 is about $13 a month. The
+demo value is entirely in the what-if output, which costs nothing. Close the PR
+afterwards, or merge it deliberately — see
+[Worth fixing](#worth-fixing-before-a-real-interview).
+
+Three checks: **Build & Test**, **Bicep Lint**, **Infra What-If**.
 
 > "Every change goes through this. Branch protection isn't enforced server-side
 > — that needs GitHub Pro on a private repo — so the flow is convention here,
@@ -153,11 +175,26 @@ Open a merged PR. Three checks: **Build & Test**, **Bicep Lint**,
 
 Volunteer that limitation before they find it. It reads as rigour.
 
-### Beat 2 · Infra What-If
+### Beat 2 · Infra What-If — the payoff
 
 Click into the job and show the log. This runs `az deployment group what-if`
 **on a pull request**, so a reviewer sees exactly which Azure resources a merge
 would create, modify or delete — before merging.
+
+For the B1 branch it prints:
+
+```
+~ Microsoft.Web/serverfarms/plan-di-dev
+    ~ sku.name: "F1" => "B1"
+~ Microsoft.Web/sites/app-di-dev-yqeffct3kgtau
+    + properties.siteConfig.healthCheckPath:  "/health"
+    ~ properties.siteConfig.alwaysOn:         false => true
+```
+
+The point to make is the **cascade**: one SKU value changed, and the template
+also turned on Always On and enabled the App Service health probe — because it
+encodes that both need Basic tier and withholds them on Free. A reviewer sees
+the real consequence of the change, not the line that was edited.
 
 Very few pipelines do this. It is the most differentiated thing in yours.
 
