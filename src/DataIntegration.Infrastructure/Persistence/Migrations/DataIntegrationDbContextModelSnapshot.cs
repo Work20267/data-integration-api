@@ -415,6 +415,16 @@ namespace DataIntegration.Infrastructure.Persistence.Migrations
                             MetricCode = "NOISE_LAEQ",
                             SourceField = "noise_LAeq",
                             SourceKey = "csv-archive"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            IsActive = true,
+                            IsRequired = false,
+                            MetricCode = "RADIATION_CPM",
+                            SensorModel = "Radiation Si22G",
+                            SourceField = "counts_per_minute",
+                            SourceKey = "json-live"
                         });
                 });
 

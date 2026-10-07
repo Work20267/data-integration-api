@@ -14,6 +14,8 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.12" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12" />
     <PackageVersion Include="Azure.Identity" Version="1.21.0" />
+    <!-- The hot path: EF cannot express a bulk MERGE upsert. See ADR 002. -->
+    <PackageVersion Include="Dapper" Version="2.1.89" />
   </ItemGroup>
 
   <ItemGroup Label="Integration">

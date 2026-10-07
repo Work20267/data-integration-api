@@ -5,10 +5,11 @@ structured data from mismatched external sources into a canonical model backed b
 Azure SQL — with idempotent upserts, per-row error isolation, and dead-letter replay
 so a partial failure never means data loss.
 
-> **Status: Phase 3 (ingestion).** Deployed on Azure, schema live in Azure SQL,
-> and the live feed ingests into staging — **17,770 real readings in 15.5 s**,
-> with a replayed request recognised in 57 ms and nothing re-ingested.
-> Transformation and sync land in Phases 4–5. See [Roadmap](#roadmap).
+> **Status: Phase 4 (transformation).** Deployed on Azure, and the full
+> ingest → transform → canonical path runs on real data: **17,770 readings
+> staged in 15.5 s**, then **17,707 canonical and 63 dead-lettered in 3.5 s**,
+> with duplicates absorbed by the upsert. Sync and the second source land in
+> Phase 5. See [Roadmap](#roadmap).
 
 ## Data sources
 
@@ -116,9 +117,58 @@ straight into `SqlBulkCopy` chunks of 2,000, so memory stays flat regardless of
 how large the window is.
 
 Ingestion deliberately does not interpret the payload — each row is stored
-verbatim. Transformation into the canonical model is Phase 4, and keeping them
-separate is what makes a mapping fix reprocessable without re-fetching from a
-volunteer-funded upstream.
+verbatim. That separation is what makes a mapping fix reprocessable without
+re-fetching from a volunteer-funded upstream.
+
+### Transformation
+
+| Endpoint | Behaviour |
+|---|---|
+| `POST /api/v1/transform/{batchId}` | Transforms a batch's pending rows. Safe to repeat — rows are marked as they resolve, and the canonical write is an upsert. |
+| `POST /api/v1/transform/reload-mappings` | Drops the rule cache so a newly inserted rule takes effect without a restart. |
+| `GET /api/v1/dead-letter` | Lists rows that could not be transformed. |
+| `GET /api/v1/dead-letter/summary` | Counts grouped by error code. |
+| `POST /api/v1/dead-letter/{id}/replay` | Re-transforms one row with the current rules. `200` if now canonical, `409` with the current reason if it still fails. |
+
+```bash
+curl -X POST http://localhost:8080/api/v1/transform/01a11510-...
+# {"rowsRead":17770,"rowsCanonical":17707,"rowsDeadLettered":63,"durationSeconds":3.49}
+```
+
+**A non-zero dead-letter count alongside a large canonical count is a success,
+not a failure.** One unexpected row out of 17,770 must not reject the other
+17,769 — see [ADR 005](docs/adr/005-per-row-isolation-and-dead-letter-replay.md).
+
+All 63 failures in that run had a single cause, and it was not corrupt data:
+
+```
+GET /api/v1/dead-letter/summary
+{"NO_MAPPED_MEASUREMENTS": 63}
+
+"No field on this Radiation Si22G reading resolved to a known metric."
+```
+
+Someone has a **Geiger counter** on an air-quality network. The fix needs no
+code change and no deployment:
+
+```sql
+INSERT INTO SourceMapping (SourceKey, SensorModel, SourceField, MetricCode, IsRequired, IsActive)
+VALUES ('json-live', 'Radiation Si22G', 'counts_per_minute', 'RADIATION_CPM', 0, 1);
+```
+```bash
+curl -X POST .../api/v1/transform/reload-mappings   # 204
+curl -X POST .../api/v1/dead-letter/1/replay        # 200 {"outcome":"replayed"}
+```
+
+### Known gap
+
+Canonical data currently accepts physically impossible values — temperatures
+from −149 °C to 614 °C, humidity above 1600%, negative particulate counts. The
+pipeline ingests faithfully, which is correct, but there is no plausibility
+check yet, so a broken sensor's output is stored as though it were an
+observation. Min/max bounds per metric on `SourceMapping` plus a
+`VALUE_OUT_OF_RANGE` code would route these through the dead-letter machinery
+that already exists. Recorded in ADR 005 so it is not mistaken for an oversight.
 
 ### Health endpoints
 

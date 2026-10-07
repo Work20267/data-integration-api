@@ -3,6 +3,7 @@ using DataIntegration.Core.Observability;
 using DataIntegration.Infrastructure;
 using DataIntegration.Infrastructure.Ingestion;
 using DataIntegration.Infrastructure.Sources.SensorCommunity;
+using DataIntegration.Infrastructure.Transformation;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -38,7 +39,13 @@ builder.Services.AddOptions<IngestOptions>()
     .ValidateDataAnnotations()
     .ValidateOnStart();
 
+builder.Services.AddOptions<TransformOptions>()
+    .Bind(builder.Configuration.GetSection(TransformOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
 builder.Services.AddDataIntegrationIngestion();
+builder.Services.AddDataIntegrationTransformation();
 
 // ---- telemetry ------------------------------------------------------------
 // OpenTelemetry does the instrumentation; Azure Monitor is only an exporter.

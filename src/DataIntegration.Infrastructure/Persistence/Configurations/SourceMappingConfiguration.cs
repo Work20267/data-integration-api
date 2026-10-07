@@ -56,16 +56,33 @@ public class SourceMappingConfiguration : IEntityTypeConfiguration<SourceMapping
         New(16, SourceKeys.CsvArchive, "pressure_sealevel", MetricCodes.PressureSeaLevel),
         New(17, SourceKeys.CsvArchive, "altitude",          MetricCodes.Altitude),
         New(18, SourceKeys.CsvArchive, "noise_LAeq",        MetricCodes.NoiseLaeq),
+
+        // ---- model-specific rule --------------------------------------------
+        // Added in response to a real batch: 63 rows dead-lettered as
+        // NO_MAPPED_MEASUREMENTS from a Geiger counter on the network. This is the
+        // only rule scoped to one sensor model, because "counts_per_minute" means
+        // something specific to this device and nothing on an air-quality sensor.
+        // The other three fields it reports (counts, hv_pulses, sample_time_ms)
+        // are instrument diagnostics, not observations, and stay unmapped.
+        ModelSpecific(19, SourceKeys.JsonLive, "Radiation Si22G",
+            "counts_per_minute", MetricCodes.RadiationCpm),
     ];
 
-    // SensorModel stays null throughout: every rule applies to any model that
-    // happens to report the field. Model-specific overrides are what the column
-    // exists for, and none are needed yet.
-    private static SourceMapping New(int id, string sourceKey, string field, string metric) => new()
+    /// <summary>A rule that applies to any model reporting the field.</summary>
+    private static SourceMapping New(int id, string sourceKey, string field, string metric) =>
+        ModelSpecific(id, sourceKey, null, field, metric);
+
+    /// <summary>
+    /// A rule scoped to one sensor model. Resolution prefers these over the
+    /// model-agnostic rules above, so a device can override a shared field
+    /// without duplicating every other rule for it.
+    /// </summary>
+    private static SourceMapping ModelSpecific(
+        int id, string sourceKey, string? model, string field, string metric) => new()
     {
         Id = id,
         SourceKey = sourceKey,
-        SensorModel = null,
+        SensorModel = model,
         SourceField = field,
         MetricCode = metric,
         IsRequired = false,
