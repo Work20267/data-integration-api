@@ -3,6 +3,12 @@
 services:
   sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    # Microsoft publishes no arm64 image for SQL Server, so on Apple Silicon this
+    # runs emulated. Stating the platform explicitly turns a confusing runtime
+    # failure into Docker simply using emulation; it is a no-op on amd64 hosts.
+    # Enable "Use Rosetta for x86_64/amd64 emulation" in Docker Desktop for a
+    # large speed-up. See docs/setup.md.
+    platform: linux/amd64
     container_name: di-sql
     environment:
       ACCEPT_EULA: "Y"

@@ -84,6 +84,9 @@ Design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 ## Running locally
 
+> Full per-platform instructions — Windows, **macOS on Apple Silicon**, Linux —
+> plus troubleshooting are in **[docs/setup.md](docs/setup.md)**.
+
 Needs only **Git and Docker** — no .NET SDK required:
 
 ```bash
