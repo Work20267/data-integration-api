@@ -36,6 +36,29 @@ jobs:
           dotnet publish src/DataIntegration.Api/DataIntegration.Api.csproj
           --configuration Release --output ./publish
 
+      # Produced before anything is deployed, and uploaded as an artifact, so the
+      # exact DDL that will run against production is reviewable after the fact.
+      # --idempotent means re-running it is a no-op rather than an error.
+      - name: Generate idempotent migration script
+        run: |
+          dotnet tool install --global dotnet-ef
+          dotnet ef migrations script \
+            --idempotent \
+            --project src/DataIntegration.Infrastructure \
+            --startup-project src/DataIntegration.Api \
+            --output ./migrations.sql
+          echo "### Migration script" >> "$GITHUB_STEP_SUMMARY"
+          echo '```sql' >> "$GITHUB_STEP_SUMMARY"
+          head -40 ./migrations.sql >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload migration script
+        uses: actions/upload-artifact@v4
+        with:
+          name: migrations-sql
+          path: ./migrations.sql
+          retention-days: 30
+
       - name: Azure login (OIDC)
         uses: azure/login@v2
         with:
@@ -52,6 +75,19 @@ jobs:
           template: infra/main.bicep
           parameters: infra/dev.bicepparam
           failOnStdErr: false
+
+      # Schema goes first: the new code must never start against an old schema.
+      # Authentication=Active Directory Default picks up the OIDC session from
+      # azure/login, so no SQL password exists in this pipeline either.
+      - name: Apply migrations
+        uses: azure/sql-action@v2
+        with:
+          connection-string: >-
+            Server=tcp:${{ steps.infra.outputs.sqlServerFqdn }},1433;
+            Initial Catalog=${{ steps.infra.outputs.sqlDatabaseName }};
+            Authentication=Active Directory Default;
+            Encrypt=True;TrustServerCertificate=False;Connection Timeout=60;
+          path: ./migrations.sql
 
       - name: Deploy application
         uses: azure/webapps-deploy@v3
@@ -76,6 +112,15 @@ jobs:
           echo "::error::/health never returned 200 - failing the deployment"
           exit 1
 
+      # Readiness is reported but not gated on: Azure SQL serverless may still be
+      # resuming from an auto-pause, which is not a deployment failure.
+      - name: Report readiness
+        if: success()
+        run: |
+          URL="${{ steps.infra.outputs.appServiceUrl }}/health/ready"
+          CODE=$(curl -s -o /tmp/ready -w '%{http_code}' "$URL" || echo "000")
+          echo "readiness: HTTP ${CODE} $(cat /tmp/ready 2>/dev/null)"
+
       - name: Deployment summary
         if: success()
         run: |
@@ -87,4 +132,5 @@ jobs:
             echo "| App Service | \`${{ steps.infra.outputs.appServiceName }}\` |"
             echo "| URL | ${{ steps.infra.outputs.appServiceUrl }} |"
             echo "| SQL Server | \`${{ steps.infra.outputs.sqlServerFqdn }}\` |"
+            echo "| Database | \`${{ steps.infra.outputs.sqlDatabaseName }}\` |"
           } >> "$GITHUB_STEP_SUMMARY"

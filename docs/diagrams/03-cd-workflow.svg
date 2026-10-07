@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 936 654" width="936" height="654"
+  role="img" aria-label="CD workflow: a push to main runs publish, OIDC login, Bicep infrastructure deployment, app deployment, a health smoke test, and a job summary. The Bicep deployment outputs the App Service name, which feeds the app deployment step. A non-200 health response fails the deploy.">
+  <defs>
+    <style>
+      .bg   { fill: #FFFFFF; stroke: #D3DAE0; stroke-width: 1; }
+      .eyb  { fill: #0E7C86; font: 500 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; letter-spacing: 1.4px; }
+      .ttl  { fill: #101820; font: 600 17px "Archivo","Segoe UI",system-ui,sans-serif; }
+      .foot { fill: #79868F; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .box   { fill: #FFFFFF; stroke: #D3DAE0; stroke-width: 1.2; }
+      .box-a { fill: #FFFFFF; stroke: #0E7C86; stroke-width: 1.4; }
+      .arw   { fill: none; stroke: #4A5660; stroke-opacity: .6; stroke-width: 1.3; }
+      .arw-a { fill: none; stroke: #0E7C86; stroke-width: 1.5; }
+      .job   { fill: #101820; font: 500 12px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .sub   { fill: #79868F; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .lbl   { fill: #4A5660; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .warn-box { fill: #F5E7D4; stroke: #9C580B; stroke-width: 1.2; }
+      .warn-t   { fill: #9C580B; font: 500 11px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .warn-arw { fill: none; stroke: #9C580B; stroke-width: 1.3; stroke-dasharray: 5 3; }
+    </style>
+    <marker id="cd-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon fill="#4A5660" points="0,1 10,5 0,9" />
+    </marker>
+    <marker id="cd-arw-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon fill="#0E7C86" points="0,1 10,5 0,9" />
+    </marker>
+    <marker id="cd-arw-w" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon fill="#9C580B" points="0,1 10,5 0,9" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0.5" y="0.5" width="935" height="653" rx="4" />
+  <text class="eyb" x="28" y="26">CONTINUOUS DEPLOYMENT</text>
+  <text class="ttl" x="28" y="49">Push to main, six steps to live</text>
+
+  <g transform="translate(28,64)">
+    <rect class="box-a" x="250" y="14" width="300" height="38" rx="5" />
+    <text class="job" x="400" y="38" text-anchor="middle">push → main</text>
+    <text class="sub" x="400" y="70" text-anchor="middle">environment: dev · concurrency cd-dev</text>
+    <line class="arw-a" x1="400" y1="78" x2="400" y2="96" marker-end="url(#cd-arw-a)" />
+
+    <rect class="box" x="250" y="100" width="300" height="50" rx="4" />
+    <text class="job" x="270" y="130">dotnet publish</text>
+    <text class="sub" x="566" y="130">→ ./publish</text>
+    <line class="arw" x1="400" y1="150" x2="400" y2="171" marker-end="url(#cd-arw)" />
+
+    <rect class="box" x="250" y="175" width="300" height="50" rx="4" />
+    <text class="job" x="270" y="205">azure/login@v2</text>
+    <text class="sub" x="566" y="205">OIDC · no stored secret</text>
+    <line class="arw" x1="400" y1="225" x2="400" y2="246" marker-end="url(#cd-arw)" />
+
+    <rect class="box" x="250" y="250" width="300" height="50" rx="4" />
+    <text class="job" x="270" y="280">azure/arm-deploy@v2</text>
+    <text class="sub" x="566" y="275">infra/main.bicep</text>
+    <text class="sub" x="566" y="291">dev.bicepparam</text>
+    <line class="arw" x1="400" y1="300" x2="400" y2="321" marker-end="url(#cd-arw)" />
+
+    <rect class="box" x="250" y="325" width="300" height="50" rx="4" />
+    <text class="job" x="270" y="355">azure/webapps-deploy@v3</text>
+    <text class="sub" x="566" y="355">zip deploy to App Service</text>
+    <line class="arw" x1="400" y1="375" x2="400" y2="396" marker-end="url(#cd-arw)" />
+
+    <rect class="box-a" x="250" y="400" width="300" height="50" rx="4" />
+    <text class="job" x="270" y="430">curl /health</text>
+    <text class="sub" x="566" y="424">12 attempts × 15s</text>
+    <text class="sub" x="566" y="440">cold F1 start is slow</text>
+    <line class="arw-a" x1="400" y1="450" x2="400" y2="471" marker-end="url(#cd-arw-a)" />
+
+    <rect class="box" x="250" y="475" width="300" height="50" rx="4" />
+    <text class="job" x="270" y="505">job summary</text>
+    <text class="sub" x="566" y="505">URL · SQL FQDN</text>
+
+    <path class="arw" marker-end="url(#cd-arw)" d="M 250 276 Q 196 276 196 312 Q 196 350 244 350" />
+    <text class="lbl" x="186" y="306" text-anchor="end">appServiceName</text>
+    <text class="lbl" x="186" y="322" text-anchor="end">appServiceUrl</text>
+
+    <path class="warn-arw" marker-end="url(#cd-arw-w)" d="M 550 436 Q 616 436 640 452" />
+    <rect class="warn-box" x="660" y="438" width="190" height="34" rx="4" />
+    <text class="warn-t" x="755" y="460" text-anchor="middle">deployment fails</text>
+    <text class="lbl" x="596" y="428" text-anchor="middle">non-200</text>
+  </g>
+
+  <text class="foot" x="28" y="640">the app's name is read out of the Bicep deployment, never hard-coded in the workflow</text>
+</svg>

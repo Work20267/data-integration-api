@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1066 488" width="1066" height="488"
+  role="img" aria-label="CI workflow: triggers fan out to two parallel jobs, build-test and bicep-lint. The infra-what-if job depends on bicep-lint and runs only on pull requests.">
+  <defs>
+    <style>
+      .bg   { fill: #FFFFFF; stroke: #D3DAE0; stroke-width: 1; }
+      .eyb  { fill: #0E7C86; font: 500 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; letter-spacing: 1.4px; }
+      .ttl  { fill: #101820; font: 600 17px "Archivo","Segoe UI",system-ui,sans-serif; }
+      .foot { fill: #79868F; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .box   { fill: #FFFFFF; stroke: #D3DAE0; stroke-width: 1.2; }
+      .box-a { fill: #FFFFFF; stroke: #0E7C86; stroke-width: 1.4; }
+      .arw   { fill: none; stroke: #4A5660; stroke-opacity: .6; stroke-width: 1.3; }
+      .dot   { fill: #101820; }
+      .job   { fill: #101820; font: 500 12px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .sub   { fill: #79868F; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .mono-t{ fill: #4A5660; font: 400 11px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .lbl   { fill: #4A5660; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .pill  { fill: #D9EDEF; }
+      .pill-t{ fill: #0E7C86; font: 500 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .badge { fill: #D9EDEF; }
+      .badge-t{ fill: #0E7C86; font: 500 9px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+    </style>
+    <marker id="ci-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon fill="#4A5660" points="0,1 10,5 0,9" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0.5" y="0.5" width="1065" height="487" rx="4" />
+  <text class="eyb" x="28" y="26">CONTINUOUS INTEGRATION</text>
+  <text class="ttl" x="28" y="49">What runs on every push</text>
+
+  <g transform="translate(28,64)">
+    <rect class="box" x="16" y="96" width="230" height="178" rx="5" />
+    <text class="sub" x="30" y="118">on:</text>
+    <text class="mono-t" x="30" y="142">pull_request:</text>
+    <text class="mono-t" x="46" y="160">main, develop</text>
+    <text class="mono-t" x="30" y="184">push:</text>
+    <text class="mono-t" x="46" y="202">develop</text>
+    <text class="mono-t" x="46" y="220">feature/**</text>
+    <text class="mono-t" x="46" y="238">release/** hotfix/**</text>
+    <text class="mono-t" x="30" y="262">workflow_dispatch</text>
+
+    <line class="arw" x1="246" y1="185" x2="284" y2="185" />
+    <circle class="dot" cx="290" cy="185" r="3" />
+    <text class="lbl" x="250" y="176">on push / PR</text>
+
+    <path class="arw" marker-end="url(#ci-arw)" d="M 294 180 Q 312 180 326 118" />
+    <path class="arw" marker-end="url(#ci-arw)" d="M 294 190 Q 312 190 326 254" />
+
+    <rect class="box" x="330" y="40" width="330" height="152" rx="5" />
+    <text class="job" x="346" y="66">build-test</text>
+    <text class="sub" x="346" y="84">runs-on: ubuntu-latest</text>
+
+    <rect class="pill" x="346" y="98" width="64" height="28" rx="3" />
+    <text class="pill-t" x="378" y="116" text-anchor="middle">restore</text>
+    <line class="arw" x1="412" y1="112" x2="422" y2="112" marker-end="url(#ci-arw)" />
+
+    <rect class="pill" x="424" y="98" width="64" height="28" rx="3" />
+    <text class="pill-t" x="456" y="116" text-anchor="middle">build</text>
+    <line class="arw" x1="490" y1="112" x2="500" y2="112" marker-end="url(#ci-arw)" />
+
+    <rect class="pill" x="502" y="98" width="64" height="28" rx="3" />
+    <text class="pill-t" x="534" y="116" text-anchor="middle">test</text>
+    <line class="arw" x1="568" y1="112" x2="578" y2="112" marker-end="url(#ci-arw)" />
+
+    <rect class="pill" x="580" y="98" width="64" height="28" rx="3" />
+    <text class="pill-t" x="612" y="116" text-anchor="middle">publish</text>
+
+    <text class="sub" x="346" y="152">2 test projects · xUnit v3</text>
+    <text class="sub" x="346" y="172">uploads → test-results.trx · app package</text>
+
+    <rect class="box" x="330" y="212" width="330" height="84" rx="5" />
+    <text class="job" x="346" y="238">bicep-lint</text>
+    <rect class="pill" x="346" y="250" width="148" height="28" rx="3" />
+    <text class="pill-t" x="420" y="268" text-anchor="middle">az bicep build</text>
+    <text class="sub" x="506" y="268">compile-time check</text>
+
+    <line class="arw" x1="660" y1="254" x2="694" y2="254" marker-end="url(#ci-arw)" />
+    <text class="lbl" x="677" y="246" text-anchor="middle">needs</text>
+
+    <rect class="box-a" x="700" y="212" width="294" height="140" rx="5" />
+    <text class="job" x="716" y="238">infra-what-if</text>
+    <rect class="badge" x="716" y="248" width="132" height="19" rx="3" />
+    <text class="badge-t" x="782" y="261" text-anchor="middle">pull_request only</text>
+    <text class="mono-t" x="716" y="292">azure/login@v2 · OIDC</text>
+    <text class="mono-t" x="716" y="312">az deployment group what-if</text>
+    <text class="sub" x="716" y="336">→ infra diff, visible in review</text>
+  </g>
+
+  <text class="foot" x="28" y="474">build-test and bicep-lint have no dependency on each other, so they share the same wall-clock</text>
+</svg>

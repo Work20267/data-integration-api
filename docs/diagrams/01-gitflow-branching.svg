@@ -1,0 +1,95 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1066 388" width="1066" height="388"
+  role="img" aria-label="Gitflow branch diagram: develop branches from main; feature branches merge back to develop; a release branch is cut from develop and merged to both main and develop; a hotfix is cut from main and merged back to main and develop.">
+  <defs>
+    <style>
+      .bg   { fill: #FFFFFF; stroke: #D3DAE0; stroke-width: 1; }
+      .eyb  { fill: #0E7C86; font: 500 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; letter-spacing: 1.4px; }
+      .ttl  { fill: #101820; font: 600 17px "Archivo","Segoe UI",system-ui,sans-serif; }
+      .foot { fill: #79868F; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .lane-line { fill: none; stroke: #101820; stroke-opacity: .3; stroke-width: 1.5; }
+      .lane-main { fill: none; stroke: #0E7C86; stroke-width: 2.5; }
+      .lane-dev  { fill: none; stroke: #101820; stroke-opacity: .75; stroke-width: 2; }
+      .dot   { fill: #101820; }
+      .dot-a { fill: #0E7C86; }
+      .arw   { fill: none; stroke: #4A5660; stroke-opacity: .6; stroke-width: 1.3; }
+      .arw-a { fill: none; stroke: #0E7C86; stroke-width: 1.5; }
+      .lbl   { fill: #4A5660; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .lane-t   { fill: #79868F; font: 400 11px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .lane-t-a { fill: #0E7C86; font: 500 11px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+    </style>
+    <marker id="g-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon fill="#4A5660" points="0,1 10,5 0,9" />
+    </marker>
+    <marker id="g-arw-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon fill="#0E7C86" points="0,1 10,5 0,9" />
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0.5" y="0.5" width="1065" height="387" rx="4" />
+  <text class="eyb" x="28" y="26">BRANCHING</text>
+  <text class="ttl" x="28" y="49">Gitflow topology</text>
+
+  <g transform="translate(28,64)">
+    <text class="lane-t-a" x="8" y="56">main · protected</text>
+    <text class="lane-t" x="8" y="110">hotfix/*</text>
+    <text class="lane-t" x="8" y="164">release/*</text>
+    <text class="lane-t" x="8" y="218">develop · protected</text>
+    <text class="lane-t" x="8" y="272">feature/*</text>
+
+    <line class="lane-main" x1="140" y1="52" x2="950" y2="52" />
+    <line class="lane-line" x1="750" y1="106" x2="860" y2="106" />
+    <line class="lane-line" x1="510" y1="160" x2="640" y2="160" />
+    <line class="lane-dev" x1="140" y1="214" x2="950" y2="214" />
+    <line class="lane-line" x1="210" y1="268" x2="350" y2="268" />
+    <line class="lane-dev" x1="140" y1="52" x2="140" y2="214" />
+
+    <circle class="dot-a" cx="140" cy="52" r="4.5" />
+    <circle class="dot-a" cx="660" cy="52" r="4.5" />
+    <circle class="dot-a" cx="880" cy="52" r="4.5" />
+
+    <circle class="dot" cx="140" cy="214" r="4" />
+    <circle class="dot" cx="380" cy="214" r="4" />
+    <circle class="dot" cx="490" cy="214" r="4" />
+    <circle class="dot" cx="660" cy="214" r="4" />
+    <circle class="dot" cx="880" cy="214" r="4" />
+    <circle class="dot" cx="950" cy="214" r="4" />
+
+    <circle class="dot" cx="210" cy="268" r="3.5" />
+    <circle class="dot" cx="280" cy="268" r="3.5" />
+    <circle class="dot" cx="350" cy="268" r="3.5" />
+
+    <circle class="dot" cx="510" cy="160" r="3.5" />
+    <circle class="dot" cx="575" cy="160" r="3.5" />
+    <circle class="dot" cx="640" cy="160" r="3.5" />
+
+    <circle class="dot" cx="750" cy="106" r="3.5" />
+    <circle class="dot" cx="805" cy="106" r="3.5" />
+    <circle class="dot" cx="860" cy="106" r="3.5" />
+
+    <path class="arw" marker-end="url(#g-arw)" d="M 175 214 Q 195 214 206 262" />
+    <text class="lbl" x="170" y="250" text-anchor="end">branch</text>
+
+    <path class="arw" marker-end="url(#g-arw)" d="M 350 268 Q 372 268 380 220" />
+    <text class="lbl" x="390" y="256">PR merge</text>
+
+    <path class="arw" marker-end="url(#g-arw)" d="M 490 214 Q 506 214 512 166" />
+    <text class="lbl" x="484" y="188" text-anchor="end">cut release</text>
+
+    <path class="arw-a" marker-end="url(#g-arw-a)" d="M 640 160 Q 660 160 660 60" />
+    <text class="lbl" x="628" y="112" text-anchor="end">merge → main</text>
+
+    <path class="arw" marker-end="url(#g-arw)" d="M 640 160 Q 660 160 660 208" />
+    <text class="lbl" x="672" y="204">back-merge</text>
+
+    <path class="arw" marker-end="url(#g-arw)" d="M 730 52 Q 748 52 750 100" />
+    <text class="lbl" x="724" y="84" text-anchor="end">hotfix</text>
+
+    <path class="arw-a" marker-end="url(#g-arw-a)" d="M 860 106 Q 880 106 880 60" />
+    <text class="lbl" x="892" y="84">merge → main</text>
+
+    <path class="arw" marker-end="url(#g-arw)" d="M 860 106 Q 882 106 880 208" />
+    <text class="lbl" x="892" y="180">back-merge</text>
+  </g>
+
+  <text class="foot" x="28" y="374">teal = lands on main, triggers CD · grey = triggers CI only</text>
+</svg>
