@@ -5,7 +5,14 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy manifests first so the restore layer caches independently of source edits.
-COPY Directory.Build.props Directory.Packages.props ./
+#
+# .editorconfig is not optional here. It carries the rule marking EF's generated
+# migrations as generated code; without it TreatWarningsAsErrors fails the build
+# inside the image on analyzer warnings nobody authored — while the same build
+# succeeds on a developer machine, which is the worst kind of difference.
+#
+# global.json is copied so the image honours the same SDK pin as everywhere else.
+COPY Directory.Build.props Directory.Packages.props .editorconfig global.json ./
 COPY src/DataIntegration.Api/*.csproj            src/DataIntegration.Api/
 COPY src/DataIntegration.Core/*.csproj           src/DataIntegration.Core/
 COPY src/DataIntegration.Infrastructure/*.csproj src/DataIntegration.Infrastructure/
