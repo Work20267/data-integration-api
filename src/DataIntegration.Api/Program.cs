@@ -1,6 +1,8 @@
 using Azure.Monitor.OpenTelemetry.AspNetCore;
 using DataIntegration.Core.Observability;
 using DataIntegration.Infrastructure;
+using DataIntegration.Infrastructure.Ingestion;
+using DataIntegration.Infrastructure.Sources.SensorCommunity;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -21,6 +23,22 @@ builder.Services.AddDataIntegrationPersistence(connectionString);
 
 builder.Services.AddHealthChecks()
     .AddSqlServer(connectionString, name: "sql", tags: ["ready"]);
+
+// ---- ingestion ------------------------------------------------------------
+// Options are bound here because the host owns configuration; Infrastructure
+// only wires services. ValidateOnStart means a bad value fails the deployment
+// rather than the first request that happens to hit it.
+builder.Services.AddOptions<SensorCommunityOptions>()
+    .Bind(builder.Configuration.GetSection(SensorCommunityOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddOptions<IngestOptions>()
+    .Bind(builder.Configuration.GetSection(IngestOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddDataIntegrationIngestion();
 
 // ---- telemetry ------------------------------------------------------------
 // OpenTelemetry does the instrumentation; Azure Monitor is only an exporter.

@@ -5,9 +5,10 @@ structured data from mismatched external sources into a canonical model backed b
 Azure SQL — with idempotent upserts, per-row error isolation, and dead-letter replay
 so a partial failure never means data loss.
 
-> **Status: Phase 2 (data layer).** Infrastructure is deployed on Azure and the
-> canonical schema is live in Azure SQL. The ingestion, transformation and sync
-> engine lands in Phases 3–5. See [Roadmap](#roadmap).
+> **Status: Phase 3 (ingestion).** Deployed on Azure, schema live in Azure SQL,
+> and the live feed ingests into staging — **17,770 real readings in 15.5 s**,
+> with a replayed request recognised in 57 ms and nothing re-ingested.
+> Transformation and sync land in Phases 4–5. See [Roadmap](#roadmap).
 
 ## Data sources
 
@@ -93,6 +94,32 @@ The local SA password in `compose.yaml` and `appsettings.Development.json` is a
 throwaway container credential, not a secret. No production credential exists in
 this repository at all — see [Infrastructure](#infrastructure).
 
+## API
+
+| Endpoint | Behaviour |
+|---|---|
+| `POST /api/v1/ingest/{source}` | Pulls the current window from `source` and stages every row. `202` when work was done, `200` when the `Idempotency-Key` had already been processed, `404` for an unknown source, `502` when upstream stays unreachable after retries. |
+
+```bash
+curl -X POST -H "Idempotency-Key: demo-1" http://localhost:8080/api/v1/ingest/json-live
+# {"batchId":"01a11510-...","sourceKey":"json-live","rowsStaged":17770,
+#  "wasAlreadyProcessed":false,"durationSeconds":15.51}
+
+# same key again - recognised, nothing re-ingested
+curl -X POST -H "Idempotency-Key: demo-1" http://localhost:8080/api/v1/ingest/json-live
+# {"...","rowsStaged":17770,"wasAlreadyProcessed":true,"durationSeconds":0}   HTTP 200 in 0.057s
+```
+
+Measured locally against SQL Server in Docker: **17,770 rows in 15.51 s**,
+including the 8.5 MB upstream download. Rows stream from the HTTP response
+straight into `SqlBulkCopy` chunks of 2,000, so memory stays flat regardless of
+how large the window is.
+
+Ingestion deliberately does not interpret the payload — each row is stored
+verbatim. Transformation into the canonical model is Phase 4, and keeping them
+separate is what makes a mapping fix reprocessable without re-fetching from a
+volunteer-funded upstream.
+
 ### Health endpoints
 
 | Endpoint | Checks | Used by |
@@ -142,8 +169,14 @@ az deployment group create --resource-group rg-di-dev \
 
 ## Branching
 
-Gitflow. `main` is production and `develop` is the integration branch; both are
-protected and require a green CI run.
+Gitflow. `main` is production and `develop` is the integration branch. Changes
+reach them through pull requests with a green CI run.
+
+> Server-side branch protection is **not** enabled: it requires GitHub Pro on a
+> private repository. The flow is followed by convention and visible in the
+> history (feature PR → `develop`, release branch → `main` plus a back-merge),
+> but nothing currently prevents a direct push. Making the repository public, or
+> upgrading the plan, would enforce it.
 
 | Branch | Cut from | Merges to |
 |---|---|---|
