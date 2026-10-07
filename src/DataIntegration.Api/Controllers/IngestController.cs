@@ -1,6 +1,7 @@
 using DataIntegration.Core.Ingestion;
 using DataIntegration.Infrastructure.Ingestion;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace DataIntegration.Api.Controllers;
 
@@ -13,6 +14,7 @@ namespace DataIntegration.Api.Controllers;
 /// </remarks>
 [ApiController]
 [Route("api/v1/ingest")]
+[EnableRateLimiting(RateLimitPolicies.Expensive)]
 public class IngestController(IngestService ingestService, ILogger<IngestController> logger)
     : ControllerBase
 {

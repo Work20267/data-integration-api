@@ -5,11 +5,27 @@ structured data from mismatched external sources into a canonical model backed b
 Azure SQL — with idempotent upserts, per-row error isolation, and dead-letter replay
 so a partial failure never means data loss.
 
-> **Status: Phase 6 (chaos-tested).** Deployed on Azure, both sources landing in
-> one canonical model, and the two guarantees the project rests on are proven
-> against a **real SQL Server** rather than a mock: processing the same
-> observation twice produces one row, and a failure mid-batch loses nothing.
-> Observability and the runbook are Phase 7. See [Roadmap](#roadmap).
+> **Status: complete.** Deployed on Azure, both sources landing in one canonical
+> model, the two core guarantees proven against a real SQL Server, and alerts
+> provisioned by the same template as the thing they watch. See the
+> [runbook](docs/runbook.md) and the eight [ADRs](docs/adr/).
+
+## Measured
+
+Real data, real upstream, not projections.
+
+| | |
+|---|---|
+| Ingest | **17,770 readings in 15.5 s**, including an 8.5 MB download |
+| Transform | **17,707 canonical + 63 dead-lettered in 3.5 s** |
+| Replayed request | recognised in **57 ms**, nothing re-ingested |
+| Duplicates absorbed | **107** real repeats collapsed by the upsert in one batch |
+| Second source | 4,560 rows, **zero** dead letters, rules written before the parser existed |
+| Re-processing | 22,163 → **22,163** readings. Zero new rows. |
+| Warm response | 0.3 s · cold F1 start 43 s |
+
+Memory is flat regardless of volume: rows stream from the HTTP response into
+`SqlBulkCopy` chunks, so peak usage is one chunk, not one response.
 
 ## Data sources
 
@@ -57,7 +73,8 @@ external source ──▶ /api/v1/ingest ──▶ staging ──▶ transform �
 | Bulk staging load | `SqlBulkCopy` | Orders of magnitude faster than `SaveChanges` |
 | Upserts / hot reads | Dapper + `MERGE` | EF cannot express an efficient bulk upsert |
 | Resilience | `Microsoft.Extensions.Http.Resilience` (Polly v8) | Retry, circuit breaker, timeout |
-| Backpressure | Bounded `System.Threading.Channels` | Bounded queue instead of unbounded memory growth |
+| Queue between stages | **None — the staging table is the queue** | Durable, inspectable, shared across instances ([ADR 007](docs/adr/007-the-staging-table-is-the-queue.md)) |
+| Backpressure | Bounded chunk size | Peak memory is one chunk, not one response |
 | Telemetry | OpenTelemetry → Azure Monitor | Vendor-neutral, not Azure-locked |
 | Tests | xUnit v3 + Testcontainers | Integration tests run against real SQL Server |
 | Infrastructure | Bicep | Idempotent, reviewable via `what-if` |
@@ -248,6 +265,50 @@ mapping engine, canonical writer, dead-letter store and transform service were
 **not modified** — and the archive's nine mapping rules had been seeded in
 Phase 2, before the parser existed. First run: 4,560 rows, zero dead letters.
 
+## Operations
+
+OpenTelemetry exports traces and metrics to Application Insights. Azure Monitor
+is only the exporter — changing backend is a one-line swap, not a
+re-instrumentation project.
+
+| Metric | Tagged by |
+|---|---|
+| `di.ingest.rows_staged` | source |
+| `di.ingest.batches` | source, outcome |
+| `di.ingest.duration` | source, outcome |
+| `di.transform.rows_canonical` | source |
+| `di.transform.rows_dead_lettered` | source, **error code** |
+| `di.transform.duration` | source |
+
+Tagging dead letters by error code is what lets an operator answer the only
+question that matters first: are 400 failures *one* problem or four?
+
+### Alerts are infrastructure
+
+Defined in [`infra/modules/alerts.bicep`](infra/modules/alerts.bicep) and
+deployed by the same template as the App Service, so an environment cannot
+exist without its monitoring.
+
+| Alert | Fires when |
+|---|---|
+| `alert-<env>-5xx` | more than 5 server errors in 15 minutes |
+| `alert-<env>-deadletters` | more than 500 dead letters in an hour (KQL over `customMetrics`) |
+
+### Runbook
+
+[`docs/runbook.md`](docs/runbook.md) covers the failure modes with diagnosis and
+fix for each. Every one of them was hit while building this — the OIDC immutable
+subject claim, the Azure for Students region restriction, the archive
+rate-limiting us, `sqlcmd` defaulting `QUOTED_IDENTIFIER` off, and a Geiger
+counter turning up on an air-quality network.
+
+### Rate limiting
+
+Five requests per minute on ingest and transform. An ingest pulls 8.5 MB from a
+volunteer-funded host, so the limit protects someone else's infrastructure as
+much as ours. Health probes are deliberately **not** limited — throttling a
+liveness check would make App Service recycle a healthy app.
+
 ### Known gaps
 
 **No plausibility checking.** Canonical data accepts physically impossible
@@ -336,12 +397,30 @@ reach them through pull requests with a green CI run.
 
 ## Roadmap
 
-| Phase | Scope | Gate |
-|---|---|---|
-| 1 | Foundation, IaC, CI/CD | Live Azure URL, no secrets |
-| 2 | Schema, EF Core, managed-identity SQL | Passwordless SQL access |
-| 3 | Source #1 connector, staging | Rows staged, survives upstream failure |
-| 4 | Transformation engine, dead letter | Bad rows isolate, replay works |
-| 5 | Sync, idempotency, source #2 | Double-ingest is a no-op |
-| 6 | Chaos test | Zero loss, zero duplicates mid-failure |
-| 7 | Observability, runbook, docs | Alert fires, runbook recovers |
+| Phase | Scope | Gate | |
+|---|---|---|---|
+| 1 | Foundation, IaC, CI/CD | Live Azure URL, no secrets | ✅ |
+| 2 | Schema, EF Core, managed-identity SQL | Passwordless SQL access | ✅ |
+| 3 | Source #1 connector, staging | Rows staged, survives upstream failure | ✅ |
+| 4 | Transformation engine, dead letter | Bad rows isolate, replay works | ✅ |
+| 5 | Sync, idempotency, source #2 | Double-ingest is a no-op | ✅ |
+| 6 | Chaos test | Zero loss, zero duplicates mid-failure | ✅ |
+| 7 | Observability, runbook, docs | Alert fires, runbook recovers | ✅ |
+
+## Decision records
+
+| | |
+|---|---|
+| [001](docs/adr/001-data-sources.md) | Why these two feeds, and the `P1`-is-PM10 trap |
+| [002](docs/adr/002-ef-core-alongside-dapper.md) | EF Core for config, Dapper + `SqlBulkCopy` for the hot path |
+| [003](docs/adr/003-liveness-separate-from-readiness.md) | Why liveness must not check the database |
+| [004](docs/adr/004-stream-ingestion-in-bounded-chunks.md) | Streaming into bounded chunks |
+| [005](docs/adr/005-per-row-isolation-and-dead-letter-replay.md) | Per-row isolation; the dead letter as a work queue |
+| [006](docs/adr/006-two-sources-one-canonical-model.md) | Two sources, one model, and how the proof was built |
+| [007](docs/adr/007-the-staging-table-is-the-queue.md) | Why there is **no** queue between the stages |
+| [008](docs/adr/008-proving-zero-loss-against-real-sql-server.md) | Proving zero loss against real SQL Server |
+
+## Attribution
+
+Data from [Sensor.Community](https://sensor.community), a volunteer-run network
+of DIY air-quality sensors. Licensed ODbL / CC-BY-SA.

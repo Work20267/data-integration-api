@@ -1,11 +1,13 @@
 using DataIntegration.Core.Transformation;
 using DataIntegration.Infrastructure.Transformation;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace DataIntegration.Api.Controllers;
 
 [ApiController]
 [Route("api/v1/transform")]
+[EnableRateLimiting(RateLimitPolicies.Expensive)]
 public class TransformController(
     TransformService transformService,
     IMappingRuleProvider mappingRules) : ControllerBase
