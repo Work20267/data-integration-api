@@ -75,7 +75,27 @@ public static class DependencyInjection
                 resilience.Retry.UseJitter = true;
             });
 
+        // The archive needs the same treatment: its directory listing alone is
+        // ~4.5 MB, and it returned an outright connection failure under light
+        // load during development.
+        services.AddHttpClient<ArchiveReader>(client =>
+            {
+                client.Timeout = Timeout.InfiniteTimeSpan;
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                    "DataIntegration/0.3 (+https://github.com/Work20267/data-integration-api)");
+            })
+            .AddStandardResilienceHandler(resilience =>
+            {
+                resilience.AttemptTimeout.Timeout = TimeSpan.FromSeconds(150);
+                resilience.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(480);
+                resilience.CircuitBreaker.SamplingDuration = TimeSpan.FromSeconds(300);
+                resilience.Retry.MaxRetryAttempts = 3;
+                resilience.Retry.BackoffType = DelayBackoffType.Exponential;
+                resilience.Retry.UseJitter = true;
+            });
+
         services.AddTransient<IUpstreamReader>(sp => sp.GetRequiredService<LiveFeedReader>());
+        services.AddTransient<IUpstreamReader>(sp => sp.GetRequiredService<ArchiveReader>());
 
         services.AddScoped<IStagingWriter, StagingWriter>();
         services.AddScoped<IIngestBatchStore, IngestBatchStore>();
@@ -93,9 +113,11 @@ public static class DependencyInjection
     /// </summary>
     public static IServiceCollection AddDataIntegrationTransformation(this IServiceCollection services)
     {
-        // One parser per source format. Phase 5 adds the CSV archive parser here
-        // and nothing else changes — the mapping engine never sees a format.
+        // One parser per source format. Adding the archive required exactly this
+        // line plus rows in SourceMapping — the mapping engine is untouched,
+        // which is the claim ADR 002 and the parser/engine seam were built to make.
         services.AddTransient<IPayloadParser, LiveFeedPayloadParser>();
+        services.AddTransient<IPayloadParser, CsvArchivePayloadParser>();
 
         // Singleton so the rule cache survives across requests. Rules are read for
         // every one of ~17,700 rows in a batch.

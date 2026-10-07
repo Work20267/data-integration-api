@@ -5,11 +5,11 @@ structured data from mismatched external sources into a canonical model backed b
 Azure SQL — with idempotent upserts, per-row error isolation, and dead-letter replay
 so a partial failure never means data loss.
 
-> **Status: Phase 4 (transformation).** Deployed on Azure, and the full
-> ingest → transform → canonical path runs on real data: **17,770 readings
-> staged in 15.5 s**, then **17,707 canonical and 63 dead-lettered in 3.5 s**,
-> with duplicates absorbed by the upsert. Sync and the second source land in
-> Phase 5. See [Roadmap](#roadmap).
+> **Status: Phase 5 (second source).** Deployed on Azure, with **both** sources
+> landing in one canonical model — 17,603 readings from the live JSON feed and
+> 4,560 from the CSV archive. Re-processing the same observations produces
+> **zero new rows**. Scheduled sync, the chaos test and the ops layer are
+> Phases 5–7. See [Roadmap](#roadmap).
 
 ## Data sources
 
@@ -160,15 +160,59 @@ curl -X POST .../api/v1/transform/reload-mappings   # 204
 curl -X POST .../api/v1/dead-letter/1/replay        # 200 {"outcome":"replayed"}
 ```
 
-### Known gap
+### Idempotency
 
-Canonical data currently accepts physically impossible values — temperatures
-from −149 °C to 614 °C, humidity above 1600%, negative particulate counts. The
-pipeline ingests faithfully, which is correct, but there is no plausibility
-check yet, so a broken sensor's output is stored as though it were an
-observation. Min/max bounds per metric on `SourceMapping` plus a
-`VALUE_OUT_OF_RANGE` code would route these through the dead-letter machinery
-that already exists. Recorded in ADR 005 so it is not mistaken for an oversight.
+The guarantee the project rests on: **processing the same observation twice
+produces one row.** Measured, not asserted:
+
+```
+re-process the identical 4,560 archive rows
+  rowsCanonical reported        4,560     the writer did the work
+  readings      22,163 → 22,163           UNCHANGED
+  measurements  58,975 → 58,975           UNCHANGED
+  duplicate ExternalKeys            0
+```
+
+Three things make it work, and all three are easy to get wrong:
+
+1. **`ExternalKey` is truncated to whole seconds.** The live feed writes
+   `2026-10-04 00:00:15`, the archive writes `2026-10-04T00:00:15`. A key that
+   kept milliseconds would store the same reading twice and fail *silently*.
+2. **The write is a `MERGE` with `HOLDLOCK`**, against the `ExternalKey` unique
+   index — without the lock hint, `MERGE` can race itself and violate that index.
+3. **Nulls mean "this source does not say."** The archive has no country or
+   indoor flag, so it must not overwrite what the live feed supplied.
+
+See [ADR 006](docs/adr/006-two-sources-one-canonical-model.md), which also
+records how the proof was constructed and why the cross-source version of it
+cannot be run on demand.
+
+### Adding a source
+
+Supporting the CSV archive required a parser, a reader, and two DI lines. The
+mapping engine, canonical writer, dead-letter store and transform service were
+**not modified** — and the archive's nine mapping rules had been seeded in
+Phase 2, before the parser existed. First run: 4,560 rows, zero dead letters.
+
+### Known gaps
+
+**No plausibility checking.** Canonical data accepts physically impossible
+values — temperatures from −149 °C to 614 °C, humidity above 1600%, negative
+particulate counts. The pipeline ingests faithfully, which is correct, but a
+broken sensor's output is stored as though it were an observation. Min/max
+bounds per metric on `SourceMapping` plus a `VALUE_OUT_OF_RANGE` code would
+route these through the dead-letter machinery that already exists. See ADR 005.
+
+**A truncated archive listing looks like a small day.** One listing fetch
+returned 280 KB instead of 4.5 MB and contained only `bme280` entries — which is
+why all 4,560 archive readings are BME280 despite the filter also allowing
+`sds011`. The reader cannot currently tell a short day from a short response.
+See ADR 006.
+
+**Sync is manual.** Ingest and transform are separate endpoint calls. A
+`BackgroundService` driving them on a schedule, using `SyncWatermark` to resume,
+is the remaining half of Phase 5 — the table and the resume semantics exist, the
+worker does not.
 
 ### Health endpoints
 
