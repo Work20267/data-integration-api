@@ -6,6 +6,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Monitor.OpenTelemetry.AspNetCore" />
+    <PackageReference Include="OpenTelemetry.Instrumentation.SqlClient" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\DataIntegration.Core\DataIntegration.Core.csproj" />
     <ProjectReference Include="..\DataIntegration.Infrastructure\DataIntegration.Infrastructure.csproj" />
   </ItemGroup>

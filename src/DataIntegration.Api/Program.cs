@@ -1,5 +1,9 @@
+using Azure.Monitor.OpenTelemetry.AspNetCore;
+using DataIntegration.Core.Observability;
 using DataIntegration.Infrastructure;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Trace;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +21,27 @@ builder.Services.AddDataIntegrationPersistence(connectionString);
 
 builder.Services.AddHealthChecks()
     .AddSqlServer(connectionString, name: "sql", tags: ["ready"]);
+
+// ---- telemetry ------------------------------------------------------------
+// OpenTelemetry does the instrumentation; Azure Monitor is only an exporter.
+// Swapping backend later is a change here, not a re-instrumentation project.
+var telemetry = builder.Services.AddOpenTelemetry()
+    .WithTracing(tracing => tracing
+        .AddSource(DiagnosticNames.ActivitySource)
+        // Statement text is not captured by default in this instrumentation, which
+        // is what we want: ingested values must not leak into traces. Only the
+        // operation, target and duration are exported.
+        .AddSqlClientInstrumentation())
+    .WithMetrics(metrics => metrics
+        .AddMeter(DiagnosticNames.Meter));
+
+// Exporting is conditional: local runs and CI have no App Insights, and
+// UseAzureMonitor without a connection string throws at startup.
+var appInsights = builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+if (!string.IsNullOrWhiteSpace(appInsights))
+{
+    telemetry.UseAzureMonitor(options => options.ConnectionString = appInsights);
+}
 
 var app = builder.Build();
 
