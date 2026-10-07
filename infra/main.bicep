@@ -22,6 +22,13 @@ param sqlAdminLogin string
 @allowed(['F1', 'B1'])
 param appServicePlanSku string = 'F1'
 
+@description('Optional. Email to notify on alerts. Empty still creates the alerts; nobody is paged.')
+param alertEmail string = ''
+
+@description('Dead letters in an hour above which the pipeline is considered unhealthy.')
+@minValue(1)
+param deadLetterThreshold int = 500
+
 var baseName = '${namePrefix}-${envName}'
 
 // Globally-unique names (SQL server, App Service) need a deterministic suffix.
@@ -67,11 +74,29 @@ module appService 'modules/appservice.bicep' = {
   }
 }
 
+// Monitoring is provisioned by the same template as the thing it watches, so an
+// environment cannot exist without its alerts.
+module alerts 'modules/alerts.bicep' = {
+  name: 'alerts'
+  params: {
+    baseName: baseName
+    location: location
+    appServiceId: appService.outputs.resourceId
+    appInsightsId: monitoring.outputs.appInsightsResourceId
+    alertEmail: alertEmail
+    deadLetterThreshold: deadLetterThreshold
+  }
+}
+
 output appServiceName string = appService.outputs.name
 output appServiceUrl string = appService.outputs.url
 output sqlServerName string = sql.outputs.serverName
 output sqlServerFqdn string = sql.outputs.serverFqdn
 output sqlDatabaseName string = sql.outputs.databaseName
+
+output actionGroupId string = alerts.outputs.actionGroupId
+output serverErrorAlertName string = alerts.outputs.serverErrorAlertName
+output deadLetterAlertName string = alerts.outputs.deadLetterAlertName
 
 // Needed to create the SQL contained user for the App Service identity.
 output identityName string = identity.name
