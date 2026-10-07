@@ -86,6 +86,7 @@ Design decisions are recorded in [`docs/adr/`](docs/adr/).
 
 > Full per-platform instructions — Windows, **macOS on Apple Silicon**, Linux —
 > plus troubleshooting are in **[docs/setup.md](docs/setup.md)**.
+> Presenting it? **[docs/demo.md](docs/demo.md)** is the run of show.
 
 Needs only **Git and Docker** — no .NET SDK required:
 
