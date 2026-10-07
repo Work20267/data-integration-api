@@ -4,6 +4,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" />
     <PackageReference Include="Azure.Identity" />
+    <PackageReference Include="Dapper" />
   </ItemGroup>
 
   <ItemGroup>

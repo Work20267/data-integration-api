@@ -1,8 +1,10 @@
 using DataIntegration.Core.Ingestion;
+using DataIntegration.Core.Transformation;
 using DataIntegration.Infrastructure.Ingestion;
 using DataIntegration.Infrastructure.Observability;
 using DataIntegration.Infrastructure.Persistence;
 using DataIntegration.Infrastructure.Sources.SensorCommunity;
+using DataIntegration.Infrastructure.Transformation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Polly;
@@ -81,6 +83,32 @@ public static class DependencyInjection
 
         // Instruments are process-wide; the meter must not be recreated per request.
         services.AddSingleton<IngestMetrics>();
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers the transformation pipeline: parsers, mapping rules, canonical
+    /// writer and the dead-letter store.
+    /// </summary>
+    public static IServiceCollection AddDataIntegrationTransformation(this IServiceCollection services)
+    {
+        // One parser per source format. Phase 5 adds the CSV archive parser here
+        // and nothing else changes — the mapping engine never sees a format.
+        services.AddTransient<IPayloadParser, LiveFeedPayloadParser>();
+
+        // Singleton so the rule cache survives across requests. Rules are read for
+        // every one of ~17,700 rows in a batch.
+        services.AddSingleton<IMappingRuleProvider, MappingRuleProvider>();
+
+        services.AddScoped<IStagingReader, StagingReader>();
+        services.AddScoped<ICanonicalWriter, CanonicalWriter>();
+        services.AddScoped<IDeadLetterStore, DeadLetterStore>();
+
+        services.AddScoped<TransformService>();
+        services.AddScoped<DeadLetterReplayService>();
+
+        services.AddSingleton<TransformMetrics>();
 
         return services;
     }
