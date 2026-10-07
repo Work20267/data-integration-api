@@ -9,7 +9,7 @@ param envName = 'dev'
 // that support every service in this template. Overrides resourceGroup().location.
 param location = 'uaenorth'
 
-param appServicePlanSku = 'F1'
+param appServicePlanSku = 'B1'
 
 // Entra administrator for the SQL server (az ad signed-in-user show).
 param sqlAdminObjectId = '5f81d1a8-4801-4cb5-8360-b8aa8dc4ffc8'
