@@ -1,0 +1,251 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1408 780" width="1408" height="780" role="img" aria-label="End-to-end workflow in 25 steps, read as one continuous path. Steps 1 to 11 are the delivery pipeline: push, CI, pull request, merge to main, then CD publishes, generates a migration script, authenticates to Azure by OIDC, deploys Bicep infrastructure, applies migrations, deploys the app and smoke-tests health. Steps 12 to 25 are the runtime request path: ingest resolves a reader, checks idempotency, opens a batch and bulk-copies rows into staging; transform pages pending rows, parses and maps each row inside its own failure boundary, merges successes into the canonical model, dead-letters failures, and loops until empty; then dead letters are repaired by replay and telemetry flows to Application Insights.">
+  <defs>
+    <style>
+      .bg   { fill: #FFFFFF; stroke: #D3DAE0; stroke-width: 1; }
+      .eyb  { fill: #0E7C86; font: 500 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; letter-spacing: 1.4px; }
+      .ttl  { fill: #101820; font: 600 17px "Archivo","Segoe UI",system-ui,sans-serif; }
+      .lede { fill: #4A5660; font: 400 11px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .foot { fill: #79868F; font: 400 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .box   { fill: #FFFFFF; stroke: #D3DAE0; stroke-width: 1.2; }
+      .num   { fill: #0E7C86; font: 600 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; letter-spacing: .6px; }
+      .num-r { fill: #4A5660; font: 600 10px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; letter-spacing: .6px; }
+      .job   { fill: #101820; font: 500 11.5px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .sub   { fill: #79868F; font: 400 9px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .arw   { fill: none; stroke: #4A5660; stroke-opacity: .55; stroke-width: 1.3; }
+      .arw-a { fill: none; stroke: #0E7C86; stroke-width: 1.6; }
+      .live  { fill: none; stroke: #0E7C86; stroke-width: 1.1; stroke-dasharray: 4 3; stroke-opacity: .85; }
+      .live-t{ fill: #0E7C86; font: 500 9px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; letter-spacing: .8px; }
+      .band  { fill: #F7F9FA; stroke: #D3DAE0; stroke-width: 1; }
+      .band-t{ fill: #4A5660; font: 400 10.5px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .warn-t{ fill: #9C580B; font: 400 10.5px "IBM Plex Mono","Cascadia Mono",Consolas,monospace; }
+      .bar-d { fill: #0E7C86; }
+      .bar-r { fill: #4A5660; }
+    </style>
+    <marker id="w-arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <polygon fill="#4A5660" fill-opacity=".75" points="0,1 10,5 0,9" />
+    </marker>
+    <marker id="w-arw-a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <polygon fill="#0E7C86" points="0,1 10,5 0,9" />
+    </marker>
+  </defs>
+  <rect class="bg" x="0.5" y="0.5" width="1407" height="779" rx="4" />
+  <text class="eyb" x="30" y="30">END-TO-END WORKFLOW</text>
+  <text class="ttl" x="30" y="54">One path, 25 steps: a push on a laptop to a repaired dead letter in Azure</text>
+  <text class="lede" x="30" y="76">follow the arrows — each row reverses direction, so the line never breaks</text>
+  <rect class="bar-d" x="1128" y="69" width="3" height="10" rx="1.5" />
+  <text class="foot" x="1137" y="78">1–11 delivery pipeline</text>
+  <rect class="bar-r" x="1266" y="69" width="3" height="10" rx="1.5" />
+  <text class="foot" x="1275" y="78">12–25 runtime path</text>
+  <g>
+    <line class="arw" x1="282" y1="146.0" x2="301" y2="146.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="556" y1="146.0" x2="575" y2="146.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="830" y1="146.0" x2="849" y2="146.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="1104" y1="146.0" x2="1123" y2="146.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="1252.0" y1="184" x2="1252.0" y2="227" marker-end="url(#w-arw)" />
+    <line class="arw" x1="1126" y1="268.0" x2="1107" y2="268.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="852" y1="268.0" x2="833" y2="268.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="578" y1="268.0" x2="559" y2="268.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="304" y1="268.0" x2="285" y2="268.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="156.0" y1="306" x2="156.0" y2="349" marker-end="url(#w-arw)" />
+    <line class="arw-a" x1="282" y1="390.0" x2="301" y2="390.0" marker-end="url(#w-arw-a)" />
+    <line class="arw" x1="556" y1="390.0" x2="575" y2="390.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="830" y1="390.0" x2="849" y2="390.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="1104" y1="390.0" x2="1123" y2="390.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="1252.0" y1="428" x2="1252.0" y2="471" marker-end="url(#w-arw)" />
+    <line class="arw" x1="1126" y1="512.0" x2="1107" y2="512.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="852" y1="512.0" x2="833" y2="512.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="578" y1="512.0" x2="559" y2="512.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="304" y1="512.0" x2="285" y2="512.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="156.0" y1="550" x2="156.0" y2="593" marker-end="url(#w-arw)" />
+    <line class="arw" x1="282" y1="634.0" x2="301" y2="634.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="556" y1="634.0" x2="575" y2="634.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="830" y1="634.0" x2="849" y2="634.0" marker-end="url(#w-arw)" />
+    <line class="arw" x1="1104" y1="634.0" x2="1123" y2="634.0" marker-end="url(#w-arw)" />
+  </g>
+  <line class="live" x1="293.0" y1="336" x2="293.0" y2="444" />
+  <text class="live-t" x="293.0" y="330" text-anchor="middle">now live</text>
+  <g>
+    <rect class="box" x="30" y="108" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="30" y="118" width="3" height="56" rx="1.5" />
+    <text class="num" x="44" y="128">01</text>
+    <text class="job" x="44" y="148">git push feature/x</text>
+    <text class="sub" x="44" y="164">Gitflow · feature branched off develop</text>
+  </g>
+  <g>
+    <rect class="box" x="304" y="108" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="304" y="118" width="3" height="56" rx="1.5" />
+    <text class="num" x="318" y="128">02</text>
+    <text class="job" x="318" y="148">CI: build · 53 tests · bicep build</text>
+    <text class="sub" x="318" y="164">stale runs cancelled by concurrency</text>
+  </g>
+  <g>
+    <rect class="box" x="578" y="108" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="578" y="118" width="3" height="56" rx="1.5" />
+    <text class="num" x="592" y="128">03</text>
+    <text class="job" x="592" y="148">PR → develop</text>
+    <text class="sub" x="592" y="164">+ Infra What-If (pull requests only)</text>
+  </g>
+  <g>
+    <rect class="box" x="852" y="108" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="852" y="118" width="3" height="56" rx="1.5" />
+    <text class="num" x="866" y="128">04</text>
+    <text class="job" x="866" y="148">merge → release/x → main</text>
+    <text class="sub" x="866" y="164">versioned release path</text>
+  </g>
+  <g>
+    <rect class="box" x="1126" y="108" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="1126" y="118" width="3" height="56" rx="1.5" />
+    <text class="num" x="1140" y="128">05</text>
+    <text class="job" x="1140" y="148">CD fires on push to main</text>
+    <text class="sub" x="1140" y="164">concurrency cd-dev · never cancelled</text>
+  </g>
+  <g>
+    <rect class="box" x="1126" y="230" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="1126" y="240" width="3" height="56" rx="1.5" />
+    <text class="num" x="1140" y="250">06</text>
+    <text class="job" x="1140" y="270">publish + migration script</text>
+    <text class="sub" x="1140" y="286">--idempotent · uploaded as an artifact</text>
+  </g>
+  <g>
+    <rect class="box" x="852" y="230" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="852" y="240" width="3" height="56" rx="1.5" />
+    <text class="num" x="866" y="250">07</text>
+    <text class="job" x="866" y="270">OIDC token → Azure</text>
+    <text class="sub" x="866" y="286">id-token: write · 3 GUIDs, no password</text>
+  </g>
+  <g>
+    <rect class="box" x="578" y="230" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="578" y="240" width="3" height="56" rx="1.5" />
+    <text class="num" x="592" y="250">08</text>
+    <text class="job" x="592" y="270">Bicep → 12 resources</text>
+    <text class="sub" x="592" y="286">incl. user-assigned managed identity</text>
+  </g>
+  <g>
+    <rect class="box" x="304" y="230" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="304" y="240" width="3" height="56" rx="1.5" />
+    <text class="num" x="318" y="250">09</text>
+    <text class="job" x="318" y="270">apply migrations</text>
+    <text class="sub" x="318" y="286">schema BEFORE the app deploys</text>
+  </g>
+  <g>
+    <rect class="box" x="30" y="230" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="30" y="240" width="3" height="56" rx="1.5" />
+    <text class="num" x="44" y="250">10</text>
+    <text class="job" x="44" y="270">deploy app → App Service</text>
+    <text class="sub" x="44" y="286">Linux · DOTNETCORE|10.0</text>
+  </g>
+  <g>
+    <rect class="box" x="30" y="352" width="252" height="76" rx="4" />
+    <rect class="bar-d" x="30" y="362" width="3" height="56" rx="1.5" />
+    <text class="num" x="44" y="372">11</text>
+    <text class="job" x="44" y="392">smoke test /health</text>
+    <text class="sub" x="44" y="408">non-200 fails the deployment</text>
+  </g>
+  <g>
+    <rect class="box" x="304" y="352" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="304" y="362" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="318" y="372">12</text>
+    <text class="job" x="318" y="392">POST /api/v1/ingest/json-live</text>
+    <text class="sub" x="318" y="408">Idempotency-Key header (optional)</text>
+  </g>
+  <g>
+    <rect class="box" x="578" y="352" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="578" y="362" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="592" y="372">13</text>
+    <text class="job" x="592" y="392">resolve reader</text>
+    <text class="sub" x="592" y="408">unknown source → 404, no DB round trip</text>
+  </g>
+  <g>
+    <rect class="box" x="852" y="352" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="852" y="362" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="866" y="372">14</text>
+    <text class="job" x="866" y="392">idempotency check</text>
+    <text class="sub" x="866" y="408">known key → 200 in 0.06 s</text>
+    <text class="sub" x="866" y="421">no work, nothing re-fetched</text>
+  </g>
+  <g>
+    <rect class="box" x="1126" y="352" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="1126" y="362" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="1140" y="372">15</text>
+    <text class="job" x="1140" y="392">open IngestBatch</text>
+    <text class="sub" x="1140" y="408">+ OpenTelemetry activity</text>
+  </g>
+  <g>
+    <rect class="box" x="1126" y="474" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="1126" y="484" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="1140" y="494">16</text>
+    <text class="job" x="1140" y="514">stream → chunk → SqlBulkCopy</text>
+    <text class="sub" x="1140" y="530">→ StagingRecord (Pending)</text>
+    <text class="sub" x="1140" y="543">peak memory = one chunk</text>
+  </g>
+  <g>
+    <rect class="box" x="852" y="474" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="852" y="484" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="866" y="494">17</text>
+    <text class="job" x="866" y="514">complete batch → 202</text>
+    <text class="sub" x="866" y="530">~17,700 rows in ~6 s</text>
+  </g>
+  <g>
+    <rect class="box" x="578" y="474" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="578" y="484" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="592" y="494">18</text>
+    <text class="job" x="592" y="514">POST /api/v1/transform/{batchId}</text>
+    <text class="sub" x="592" y="530">two calls by design, not one pipeline</text>
+  </g>
+  <g>
+    <rect class="box" x="304" y="474" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="304" y="484" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="318" y="494">19</text>
+    <text class="job" x="318" y="514">keyset page of Pending rows</text>
+    <text class="sub" x="318" y="530">Id &gt; afterId</text>
+    <text class="sub" x="318" y="543">an open reader would deadlock</text>
+  </g>
+  <g>
+    <rect class="box" x="30" y="474" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="30" y="484" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="44" y="494">20</text>
+    <text class="job" x="44" y="514">parse → map → ExternalKey</text>
+    <text class="sub" x="44" y="530">per-row boundary · never throws</text>
+    <text class="sub" x="44" y="543">key truncated to whole seconds</text>
+  </g>
+  <g>
+    <rect class="box" x="30" y="596" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="30" y="606" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="44" y="616">21</text>
+    <text class="job" x="44" y="636">MERGE → canonical</text>
+    <text class="sub" x="44" y="652">HOLDLOCK on ExternalKey</text>
+    <text class="sub" x="44" y="665">COALESCE, so a null is not an erase</text>
+  </g>
+  <g>
+    <rect class="box" x="304" y="596" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="304" y="606" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="318" y="616">22</text>
+    <text class="job" x="318" y="636">failures → DeadLetterRecord</text>
+    <text class="sub" x="318" y="652">mark Rejected · metric per code</text>
+  </g>
+  <g>
+    <rect class="box" x="578" y="596" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="578" y="606" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="592" y="616">23</text>
+    <text class="job" x="592" y="636">loop until a page returns empty</text>
+    <text class="sub" x="592" y="652">a crash resumes, never restarts</text>
+  </g>
+  <g>
+    <rect class="box" x="852" y="596" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="852" y="606" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="866" y="616">24</text>
+    <text class="job" x="866" y="636">summary → rule → reload → replay</text>
+    <text class="sub" x="866" y="652">no code change, no redeploy</text>
+  </g>
+  <g>
+    <rect class="box" x="1126" y="596" width="252" height="76" rx="4" />
+    <rect class="bar-r" x="1126" y="606" width="3" height="56" rx="1.5" />
+    <text class="num-r" x="1140" y="616">25</text>
+    <text class="job" x="1140" y="636">telemetry → App Insights → alerts</text>
+    <text class="sub" x="1140" y="652">alerts ship in the same Bicep</text>
+  </g>
+  <rect class="band" x="30" y="700" width="1348" height="50" rx="4" />
+  <text class="band-t" x="46" y="720">Step 08 provisions the managed identity that step 16 authenticates with, and the OIDC token in step 07 is what lets step 09 reach SQL — two passwordless hops, neither with a credential to rotate.</text>
+  <text class="warn-t" x="46" y="738">Not yet: step 18 is request-triggered rather than scheduled, and there is no distributed lock — a second App Service instance would page the same Pending rows at step 19.</text>
+  <text class="foot" x="30" y="768">Cloud-Deployed Data Integration API · ECA4PE23A · docs/diagrams/05-end-to-end-workflow</text>
+</svg>
